@@ -1,4 +1,4 @@
-import { createFileRoute, Navigate, useParams } from "@tanstack/react-router";
+import { createFileRoute, Navigate, Outlet, useMatch, useParams } from "@tanstack/react-router";
 import { Landing } from "@/landing/Landing";
 import { ANGLES } from "@/lib/angles";
 
@@ -25,5 +25,9 @@ function SlugLanding() {
   const { slug } = useParams({ from: "/$slug" });
   const known = ANGLES.some((a) => a.slug && a.slug === slug);
   if (!known) return <Navigate to="/" />;
+
+  const isQuizChild = useMatch({ from: "/$slug/quiz", shouldThrow: false });
+  if (isQuizChild) return <Outlet />;
+
   return <Landing slug={slug} />;
 }
