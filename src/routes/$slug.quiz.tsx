@@ -5,7 +5,7 @@ import { ANGLES } from "@/lib/angles";
 export const Route = createFileRoute("/$slug/quiz")({
   head: ({ params }) => {
     const angle = ANGLES.find((a) => a.slug === params.slug);
-    const kicker = angle?.kicker ?? "";
+    const kicker = angle?.label ?? "";
     const title = `The Hormone Check${kicker ? ` — ${kicker}` : ""}`;
     const description = angle?.description ?? "A two-minute symptom check that tells you which stage you are in. From JJ Smith.";
     return {
