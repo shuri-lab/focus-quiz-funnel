@@ -28,7 +28,7 @@ function save(S: QuizState) {
 
 export function QuizProvider({ angle, children }: { angle: Angle; children: ReactNode }) {
   const navigate = useNavigate();
-  const location = useLocation();
+  const search = useSearch();
 
   const [S, setS] = useState<QuizState>(() => {
     const restored = load();
@@ -36,7 +36,7 @@ export function QuizProvider({ angle, children }: { angle: Angle; children: Reac
     return { ...createState(), sym: [...angle.preselect] };
   });
 
-  const here = ((location.state as { screen?: ScreenId } | null)?.screen ?? 's1') as ScreenId;
+  const here = ((search as { screen?: ScreenId }).screen ?? 's1') as ScreenId;
 
   useEffect(() => { save(S); }, [S]);
 
