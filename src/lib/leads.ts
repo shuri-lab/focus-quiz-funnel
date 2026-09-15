@@ -11,7 +11,7 @@
 import { readAttribution } from './analytics';
 import type { QuizState, Outcome } from './logic';
 
-const ENDPOINT = import.meta.env.VITE_LEAD_ENDPOINT as string | undefined;
+const ENDPOINT = import.meta.env['VITE_LEAD_ENDPOINT'] as string | undefined;
 
 export interface Lead {
   name: string;
@@ -51,16 +51,14 @@ export async function submitLead(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(lead),
-      keepalive: true,       // survives the navigation to the next screen
+      keepalive: true,
     });
     return { ok: true, delivered: res.ok };
   } catch {
-    // Never block her from her result because a webhook is down.
     return { ok: true, delivered: false };
   }
 }
 
-/** Deliberately permissive. Rejecting a real address costs more than accepting a typo. */
 export function isEmail(v: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
 }

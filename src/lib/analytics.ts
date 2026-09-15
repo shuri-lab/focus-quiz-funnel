@@ -114,11 +114,11 @@ export function shopUrl(base: string, outcome: string, angle: string): string {
   const url = new URL(base);
   const attribution = readAttribution();
   url.searchParams.set('src', 'quiz');
-  url.searchParams.set('utm_source', attribution.utm_source ?? 'quiz');
-  url.searchParams.set('utm_medium', attribution.utm_medium ?? 'owned');
-  url.searchParams.set('utm_campaign', attribution.utm_campaign ?? 'hormone_check');
+  url.searchParams.set('utm_source', attribution['utm_source'] ?? 'quiz');
+  url.searchParams.set('utm_medium', attribution['utm_medium'] ?? 'owned');
+  url.searchParams.set('utm_campaign', attribution['utm_campaign'] ?? 'hormone_check');
   url.searchParams.set('utm_content', `offer_screen__${outcome}`);
   if (angle) url.searchParams.set('utm_term', angle);
-  if (attribution.fbclid) url.searchParams.set('fbclid', attribution.fbclid);
+  if (attribution['fbclid']) url.searchParams.set('fbclid', attribution['fbclid']);
   return url.toString();
 }

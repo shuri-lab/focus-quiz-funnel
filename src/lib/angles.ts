@@ -173,7 +173,7 @@ export const ANGLES: Angle[] = [
   },
 ];
 
-export const DEFAULT_ANGLE = ANGLES[0];
+export const DEFAULT_ANGLE: Angle = ANGLES[0]!;
 
 export function angleBySlug(slug: string | undefined): Angle {
   if (!slug) return DEFAULT_ANGLE;
