@@ -66,11 +66,11 @@ export function QuizProvider({ angle, children }: { angle: Angle; children: Reac
   const goTo = useCallback((id: ScreenId | undefined, replace = false) => {
     if (!id) return;
     navigate({
-      to: location.pathname + location.search,
-      state: { screen: id } as Record<string, unknown>,
+      to: '.',
+      search: (prev) => ({ ...prev, screen: id }),
       replace,
     });
-  }, [navigate, location.pathname, location.search]);
+  }, [navigate]);
 
   const advancedFrom = useRef<ScreenId | null>(null);
 
@@ -82,12 +82,11 @@ export function QuizProvider({ angle, children }: { angle: Angle; children: Reac
 
   const back = useCallback(() => {
     if (typeof window !== 'undefined' && window.history.state?.idx > 0) {
-      navigate({ to: '.', viewTransition: true }); // fallback
       window.history.back();
       return;
     }
     goTo(prevId(latest.current, here), true);
-  }, [navigate, goTo, here]);
+  }, [goTo, here]);
 
   const restart = useCallback(() => {
     const fresh = { ...createState(), sym: [...angle.preselect] };
