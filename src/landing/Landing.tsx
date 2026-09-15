@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import { angleBySlug } from '../lib/angles';
 import { usePageMeta } from '../lib/usePageMeta';
 import { track } from '../lib/analytics';
 import { JJ, REVIEWS, QUIZ_DISCLAIMER, FDA_DISCLAIMER } from '../lib/content';
-import { RatingLine, Stars, VerifiedCheck } from '../components/icons';
+import { RatingLine } from '../components/icons';
 
 function Bullet() {
   return (
@@ -23,8 +23,7 @@ function Headline({ text, em }: { text: string; em?: string }) {
   return <>{before}<em>{em}</em>{rest.join(em)}</>;
 }
 
-export function Landing() {
-  const { slug } = useParams();
+export function Landing({ slug }: { slug?: string }) {
   const angle = angleBySlug(slug);
   const quizHref = angle.slug ? `/${angle.slug}/quiz` : '/quiz';
 
@@ -39,13 +38,9 @@ export function Landing() {
 
   useEffect(() => { track.landingView(angle.slug); }, [angle.slug]);
 
-  /* The sticky bar shows whenever the hero button is not on screen — which on
-     a phone includes the moment she lands, because the headline and the
-     picture push the real button below the fold. There is always exactly one
-     call to action visible, and never two at once. */
   useEffect(() => {
     const el = heroCta.current;
-    if (!el) return;
+    if (!el || typeof window === 'undefined') return;
     const io = new IntersectionObserver(
       ([entry]) => setShowSticky(!entry.isIntersecting),
       { threshold: 0 },
@@ -54,7 +49,6 @@ export function Landing() {
     return () => io.disconnect();
   }, []);
 
-  /* The angle decides which review leads; the rest follow in their own order. */
   const reviews = [
     REVIEWS[angle.review] ?? REVIEWS[0],
     ...REVIEWS.filter((_, i) => i !== angle.review),
@@ -66,8 +60,6 @@ export function Landing() {
         <div className="headerInner">
           <span className="brand">Hormone Focus</span>
           <span className="headerSpacer" />
-          {/* the same proof sits under the hero button, where it is doing more
-              work — on a narrow screen it only wraps and crowds the wordmark */}
           <span className="headerProof"><RatingLine /></span>
         </div>
       </header>
@@ -84,9 +76,6 @@ export function Landing() {
                 <p className="heroSub">{angle.sub}</p>
               </div>
 
-              {/* On a phone this sits between the promise and the proof, where
-                  it carries the ad creative through. On a desktop it moves to
-                  its own column beside both. */}
               <div className="heroArt">
                 <img
                   src={angle.hero}
@@ -124,18 +113,18 @@ export function Landing() {
             <div className="cardRow">
               {reviews.map((r) => (
                 <div className="rev" key={r.n}>
-                  <div className="rs"><Stars n={r.r} /></div>
+                  <div className="rs"></div>
                   <p>&ldquo;{r.b}&rdquo;</p>
                   <div className="foot">
                     <b>{r.n}</b>
-                    <span className="vbadge"><VerifiedCheck />Verified buyer</span>
+                    <span className="vbadge">Verified buyer</span>
                   </div>
                 </div>
               ))}
             </div>
             <div className="ratingBlock" style={{ marginTop: 18 }}>
               <div className="ratingBig">4.9</div>
-              <div className="ratingStars"><Stars /></div>
+              <div className="ratingStars"></div>
               <p className="ratingSub">from 169 verified reviews of Hormone Focus</p>
             </div>
           </div>
@@ -147,7 +136,6 @@ export function Landing() {
             <div className="authorCard">
               <img src={JJ} alt="JJ Smith" width={560} height={796} loading="lazy" decoding="async" />
               <div>
-                {/* 800,000 is books and challenges. It is never a supplement customer count. */}
                 <p style={{ margin: 0, fontSize: 'var(--t-body)', color: 'var(--ink-2)', lineHeight: 1.5 }}>
                   <strong style={{ color: 'var(--ink)' }}>JJ Smith</strong> is a nutritionist and
                   the author whose books and challenges have helped over 800,000 women.
