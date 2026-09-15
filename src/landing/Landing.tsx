@@ -71,14 +71,14 @@ export function Landing({ slug }: { slug?: string | undefined }) {
     const el = heroCta.current;
     if (!el) return;
     const io = new IntersectionObserver(
-      ([entry]) => setShowSticky(!entry.isIntersecting),
+      ([entry]) => setShowSticky(!entry!.isIntersecting),
       { threshold: 0 },
     );
     io.observe(el);
     return () => io.disconnect();
   }, []);
 
-  const lead = REVIEWS[0];
+  const lead = REVIEWS[0]!;
 
   return (
     <div className="app landing">

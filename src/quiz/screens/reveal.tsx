@@ -125,7 +125,7 @@ export function R2() {
 export function RDoc() {
   const { S, restart } = useQuiz();
   const reason = docReason(S) || 'young';
-  const copy = DOC[reason];
+  const copy = DOC[reason]!;
   const picked = TILES.filter(([id]) => has(S, id)).map(([, label]) => label.toLowerCase());
   const list = picked.length ? picked.join(', ') : 'what you described';
 
