@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Navigate, useParams } from "@tanstack/react-router";
+import { createFileRoute, Navigate, useParams } from "@tanstack/react-router";
 import { Landing } from "@/landing/Landing";
 import { ANGLES } from "@/lib/angles";
 
