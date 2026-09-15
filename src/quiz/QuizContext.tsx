@@ -67,7 +67,7 @@ export function QuizProvider({ angle, children }: { angle: Angle; children: Reac
     if (!id) return;
     navigate({
       to: location.pathname + location.search,
-      state: { screen: id },
+      state: { screen: id } as Record<string, unknown>,
       replace,
     });
   }, [navigate, location.pathname, location.search]);
