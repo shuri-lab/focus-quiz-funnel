@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, useParams } from "@tanstack/react-router";
+import { createFileRoute, Navigate, useParams } from "@tanstack/react-router";
 import { Quiz } from "@/quiz/Quiz";
 import { ANGLES } from "@/lib/angles";
 
@@ -20,14 +20,12 @@ export const Route = createFileRoute("/$slug/quiz")({
       ],
     };
   },
-  beforeLoad: ({ params }) => {
-    const known = ANGLES.some((a) => a.slug && a.slug === params.slug);
-    if (!known) throw redirect({ to: "/" });
-  },
   component: SlugQuiz,
 });
 
 function SlugQuiz() {
   const { slug } = useParams({ from: "/$slug/quiz" });
+  const known = ANGLES.some((a) => a.slug && a.slug === slug);
+  if (!known) return <Navigate to="/" />;
   return <Quiz slug={slug} />;
 }

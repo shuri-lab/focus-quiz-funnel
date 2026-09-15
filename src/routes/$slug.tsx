@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate, useParams } from "@tanstack/react-router";
 import { Landing } from "@/landing/Landing";
 import { ANGLES } from "@/lib/angles";
 
@@ -18,14 +18,12 @@ export const Route = createFileRoute("/$slug")({
       ],
     };
   },
-  beforeLoad: ({ params }) => {
-    const known = ANGLES.some((a) => a.slug && a.slug === params.slug);
-    if (!known) throw redirect({ to: "/" });
-  },
   component: SlugLanding,
 });
 
 function SlugLanding() {
   const { slug } = useParams({ from: "/$slug" });
+  const known = ANGLES.some((a) => a.slug && a.slug === slug);
+  if (!known) return <Navigate to="/" />;
   return <Landing slug={slug} />;
 }
