@@ -179,7 +179,7 @@ export const ANGLES: Angle[] = [
   },
 ];
 
-export const DEFAULT_ANGLE = ANGLES[0];
+export const DEFAULT_ANGLE = ANGLES[0]!;
 
 /** Built from the approved headline, so the tab never carries drafted words. */
 export const angleTitle = (a: Angle) => `${a.h1a} ${a.h1b} — The Hormone Check`;

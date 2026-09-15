@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import { angleBySlug, angleTitle, type Angle } from '../lib/angles';
 import { usePageMeta } from '../lib/usePageMeta';
 import { track } from '../lib/analytics';
@@ -47,11 +47,10 @@ function Chips({ angle }: { angle: Angle }) {
 
 /** Closes every section, as the reference page does. */
 function Cta({ to }: { to: string }) {
-  return <Link className="cta" to={to}>{CTA_LABEL} &nbsp;&rarr;</Link>;
+  return <Link className="cta" to={to as string}>{CTA_LABEL} &nbsp;&rarr;</Link>;
 }
 
-export function Landing() {
-  const { slug } = useParams();
+export function Landing({ slug }: { slug?: string | undefined }) {
   const angle = angleBySlug(slug);
   const quizHref = angle.slug ? `/${angle.slug}/quiz` : '/quiz';
 
