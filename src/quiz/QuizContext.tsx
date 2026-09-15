@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useNavigate, useLocation } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import {
   createState, nextId, prevId, stateKey, QUESTIONS, REVEAL, shouldSkip,
   type QuizState, type ScreenId,
