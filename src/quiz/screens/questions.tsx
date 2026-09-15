@@ -63,7 +63,6 @@ export function S2() {
 export function S3() {
   const { next } = useQuiz();
   const v = REVIEWS[0];
-  if (!v) return null;
   return (
     <Screen id="s3">
       <p className="eyebrow">You are in the right place</p>
