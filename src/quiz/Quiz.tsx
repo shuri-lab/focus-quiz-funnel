@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import { QuizProvider } from './QuizContext';
 import { useQuiz } from './context';
 import { QuizHeader } from './QuizHeader';
@@ -30,21 +29,19 @@ function Stage() {
   );
 }
 
-export function Quiz() {
-  const { slug } = useParams();
+export function Quiz({ slug }: { slug?: string | undefined }) {
   const angle = angleBySlug(slug);
 
   usePageMeta({
     title: `The Hormone Check${angle.slug ? ` — ${angle.kicker}` : ''}`,
     description: angle.description,
-    /* The quiz itself should never be indexed. The landing pages are the
-       entry points and the quiz has no standalone value in search. */
     noindex: true,
   });
 
   useEffect(() => {
-    /* A refresh mid-quiz should land at the top of whatever screen she was on. */
-    window.scrollTo(0, 0);
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+    }
   }, []);
 
   return (

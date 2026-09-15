@@ -4,7 +4,7 @@ import { angleBySlug } from '../lib/angles';
 import { usePageMeta } from '../lib/usePageMeta';
 import { track } from '../lib/analytics';
 import { JJ, REVIEWS, QUIZ_DISCLAIMER, FDA_DISCLAIMER } from '../lib/content';
-import { RatingLine } from '../components/icons';
+import { RatingLine, Stars, VerifiedCheck } from '../components/icons';
 
 function Bullet() {
   return (
@@ -17,13 +17,13 @@ function Bullet() {
 }
 
 /** Splits the headline so the phrase the ad promised can be emphasised. */
-function Headline({ text, em }: { text: string; em?: string }) {
+function Headline({ text, em }: { text: string; em?: string | undefined }) {
   if (!em || !text.includes(em)) return <>{text}</>;
   const [before, ...rest] = text.split(em);
   return <>{before}<em>{em}</em>{rest.join(em)}</>;
 }
 
-export function Landing({ slug }: { slug?: string }) {
+export function Landing({ slug }: { slug?: string | undefined }) {
   const angle = angleBySlug(slug);
   const quizHref = angle.slug ? `/${angle.slug}/quiz` : '/quiz';
 
@@ -42,7 +42,7 @@ export function Landing({ slug }: { slug?: string }) {
     const el = heroCta.current;
     if (!el || typeof window === 'undefined') return;
     const io = new IntersectionObserver(
-      ([entry]) => setShowSticky(!entry.isIntersecting),
+      ([entry]) => setShowSticky(!entry?.isIntersecting),
       { threshold: 0 },
     );
     io.observe(el);
@@ -112,19 +112,19 @@ export function Landing({ slug }: { slug?: string }) {
             <h2 className="sectionTitle">Women with your symptoms have already done this.</h2>
             <div className="cardRow">
               {reviews.map((r) => (
-                <div className="rev" key={r.n}>
-                  <div className="rs"></div>
-                  <p>&ldquo;{r.b}&rdquo;</p>
+                <div className="rev" key={r?.n ?? Math.random()}>
+                  <div className="rs"><Stars n={r?.r ?? 5} /></div>
+                  <p>&ldquo;{r?.b}&rdquo;</p>
                   <div className="foot">
-                    <b>{r.n}</b>
-                    <span className="vbadge">Verified buyer</span>
+                    <b>{r?.n}</b>
+                    <span className="vbadge"><VerifiedCheck />Verified buyer</span>
                   </div>
                 </div>
               ))}
             </div>
             <div className="ratingBlock" style={{ marginTop: 18 }}>
               <div className="ratingBig">4.9</div>
-              <div className="ratingStars"></div>
+              <div className="ratingStars"><Stars /></div>
               <p className="ratingSub">from 169 verified reviews of Hormone Focus</p>
             </div>
           </div>
