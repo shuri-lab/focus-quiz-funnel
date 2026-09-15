@@ -33,7 +33,7 @@ export function Quiz({ slug }: { slug?: string | undefined }) {
   const angle = angleBySlug(slug);
 
   usePageMeta({
-    title: `The Hormone Check${angle.slug ? ` — ${angle.kicker}` : ''}`,
+    title: `The Hormone Check${angle.slug ? ` — ${angle.label}` : ''}`,
     description: angle.description,
     noindex: true,
   });

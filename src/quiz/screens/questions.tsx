@@ -62,8 +62,7 @@ export function S2() {
 /* Lisa. She names the symptoms rather than praising the product. */
 export function S3() {
   const { next } = useQuiz();
-  const v = REVIEWS[0];
-  if (!v) return null;
+  const v = REVIEWS[0]!;
   return (
     <Screen id="s3">
       <p className="eyebrow">You are in the right place</p>
