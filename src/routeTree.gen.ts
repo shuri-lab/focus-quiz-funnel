@@ -10,33 +10,62 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SlugRouteImport } from './routes/$slug'
+import { Route as QuizRouteImport } from './routes/quiz'
+import { Route as SlugQuizRouteImport } from './routes/$slug.quiz'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SlugRoute = SlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuizRoute = QuizRouteImport.update({
+  id: '/quiz',
+  path: '/quiz',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SlugQuizRoute = SlugQuizRouteImport.update({
+  id: '/quiz',
+  path: '/quiz',
+  getParentRoute: () => SlugRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$slug': typeof SlugRouteWithChildren
+  '/quiz': typeof QuizRoute
+  '/$slug/quiz': typeof SlugQuizRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$slug': typeof SlugRouteWithChildren
+  '/quiz': typeof QuizRoute
+  '/$slug/quiz': typeof SlugQuizRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$slug': typeof SlugRouteWithChildren
+  '/quiz': typeof QuizRoute
+  '/$slug/quiz': typeof SlugQuizRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/$slug' | '/quiz' | '/$slug/quiz'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/$slug' | '/quiz' | '/$slug/quiz'
+  id: '__root__' | '/' | '/$slug' | '/quiz' | '/$slug/quiz'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SlugRoute: typeof SlugRouteWithChildren
+  QuizRoute: typeof QuizRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +77,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$slug': {
+      id: '/$slug'
+      path: '/$slug'
+      fullPath: '/$slug'
+      preLoaderRoute: typeof SlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quiz': {
+      id: '/quiz'
+      path: '/quiz'
+      fullPath: '/quiz'
+      preLoaderRoute: typeof QuizRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$slug/quiz': {
+      id: '/$slug/quiz'
+      path: '/quiz'
+      fullPath: '/$slug/quiz'
+      preLoaderRoute: typeof SlugQuizRouteImport
+      parentRoute: typeof SlugRoute
+    }
   }
 }
 
+interface SlugRouteChildren {
+  SlugQuizRoute: typeof SlugQuizRoute
+}
+
+const SlugRouteChildren: SlugRouteChildren = {
+  SlugQuizRoute: SlugQuizRoute,
+}
+
+const SlugRouteWithChildren = SlugRoute._addFileChildren(SlugRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SlugRoute: SlugRouteWithChildren,
+  QuizRoute: QuizRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

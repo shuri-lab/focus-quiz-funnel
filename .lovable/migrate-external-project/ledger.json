@@ -1,0 +1,62 @@
+{
+  "source": "https://github.com/shuri-lab/hormon-focus-quiz-funnel-jane.git",
+  "target_stack": "TanStack Start / React 19 / Tailwind CSS v4",
+  "capabilities": [
+    {
+      "capability": "code",
+      "source": "github",
+      "outcome": "preserve",
+      "status": "in_progress",
+      "next_action": "Port React Router DOM routes to TanStack Router; wrap browser-only APIs in client-safe guards."
+    },
+    {
+      "capability": "routes",
+      "source": "github",
+      "outcome": "preserve",
+      "status": "in_progress",
+      "next_action": "Recreate /, /quiz, /:slug, /:slug/quiz in src/routes."
+    },
+    {
+      "capability": "assets",
+      "source": "github",
+      "outcome": "preserve",
+      "status": "pending",
+      "next_action": "Copy public/img and favicon.svg into the project public folder."
+    },
+    {
+      "capability": "schema",
+      "source": "github",
+      "outcome": "none",
+      "status": "not_applicable",
+      "next_action": null
+    },
+    {
+      "capability": "records",
+      "source": "github",
+      "outcome": "none",
+      "status": "not_applicable",
+      "next_action": null
+    },
+    {
+      "capability": "auth",
+      "source": "github",
+      "outcome": "none",
+      "status": "not_applicable",
+      "next_action": null
+    },
+    {
+      "capability": "external_endpoints",
+      "source": "github",
+      "outcome": "preserve",
+      "status": "pending",
+      "next_action": "Keep VITE_LEAD_ENDPOINT optional env var; leave unset until user supplies a lead endpoint."
+    },
+    {
+      "capability": "verification",
+      "source": "agent",
+      "outcome": "pending",
+      "status": "pending",
+      "next_action": "Run build and preview; exercise quiz flow and unknown-slug redirect."
+    }
+  ]
+}
