@@ -28,7 +28,7 @@ function save(S: QuizState) {
 
 export function QuizProvider({ angle, children }: { angle: Angle; children: ReactNode }) {
   const navigate = useNavigate();
-  const search = useSearch();
+  const search = useSearch({ strict: false });
 
   const [S, setS] = useState<QuizState>(() => {
     const restored = load();
