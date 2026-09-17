@@ -2,14 +2,28 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   createRootRouteWithContext,
+  useLocation,
   useRouter,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { initClarity, pageView } from "../lib/analytics";
+
+/* TRACKING. GTM-WT4MWLTH is the container and the only tag hard-coded here.
+   Meta pixel and GA4 are deliberately not committed: add them as tags INSIDE
+   the container, not as script tags, so the IDs stay in the ad account rather
+   than in a public repo. src/lib/analytics.ts pushes every funnel event to
+   dataLayer already. */
+const GTM_ID = "GTM-WT4MWLTH";
+const GTM_SNIPPET = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${GTM_ID}');`;
 
 function NotFoundComponent() {
   return (
