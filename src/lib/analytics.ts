@@ -59,7 +59,7 @@ export function pageView(path: string, title: string): void {
 
 /* ------------------------------------------------------------ clarity -- */
 
-const CLARITY_ID = import.meta.env.VITE_CLARITY_ID as string | undefined;
+const CLARITY_ID = import.meta.env['VITE_CLARITY_ID'] as string | undefined;
 
 /**
  * Microsoft Clarity. Injected once, and only when VITE_CLARITY_ID is set, so

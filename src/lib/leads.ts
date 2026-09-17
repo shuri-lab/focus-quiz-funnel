@@ -11,7 +11,7 @@
 import { readAttribution } from './analytics';
 import type { QuizState, Outcome } from './logic';
 
-const ENDPOINT = import.meta.env.VITE_LEAD_ENDPOINT as string | undefined;
+const ENDPOINT = import.meta.env['VITE_LEAD_ENDPOINT'] as string | undefined;
 
 export interface Lead {
   name: string;
