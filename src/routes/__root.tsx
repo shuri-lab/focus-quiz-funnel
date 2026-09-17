@@ -138,12 +138,29 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const location = useLocation();
+  const lastTracked = useRef<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       import('../lib/analytics').then(({ captureAttribution }) => captureAttribution());
+      /* No-op unless VITE_CLARITY_ID is set. */
+      initClarity();
     }
   }, []);
+
+  /* Tells GTM about client-side navigations, which it cannot see on its own:
+     the container script runs once on the first HTML document, so every later
+     route needs this virtual pageview. The ref guards against re-renders with
+     an unchanged path counting as a second view.
+     In the container: trigger page tags on the Custom Event `page_view`, NOT
+     on the built-in Page View, or the first route counts twice. */
+  useEffect(() => {
+    const path = location.pathname + location.search;
+    if (lastTracked.current === path) return;
+    lastTracked.current = path;
+    pageView(path, document.title);
+  }, [location]);
 
   return (
     <QueryClientProvider client={queryClient}>
