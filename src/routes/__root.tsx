@@ -156,7 +156,7 @@ function RootComponent() {
      In the container: trigger page tags on the Custom Event `page_view`, NOT
      on the built-in Page View, or the first route counts twice. */
   useEffect(() => {
-    const path = location.pathname + location.search;
+    const path = location.pathname + location.searchStr;
     if (lastTracked.current === path) return;
     lastTracked.current = path;
     pageView(path, document.title);
