@@ -43,6 +43,8 @@ export interface QuizState {
   helped: Helped | '';
   name: string;
   email: string;
+  /** Ticked opt-in. No address is sent anywhere while this is false. */
+  consent: boolean;
 }
 
 /** The complete shape. Every field, and what it may hold. */
@@ -50,7 +52,7 @@ export function createState(): QuizState {
   return {
     sym: [], age: '', periods: '', stopCause: '', reg: '',
     mood: [], markers: [], sev: '', tried: [], helped: '',
-    name: '', email: '',
+    name: '', email: '', consent: false,
   };
 }
 
@@ -229,6 +231,31 @@ export const QUESTIONS: ScreenId[] = ['s1', 's2', 's4', 's4b', 's5', 's6', 's7',
 /** The reveal, which is paced differently from the questions. */
 export const REVEAL: ScreenId[] = ['r1', 'r2', 'rDoc', 'r4', 'r4b', 'r5', 'r6', 'r7'];
 
+/** Everything between s4b and rDoc. A doctor-route state sees none of it. */
+const EXIT_AT_S4B: ScreenId[] = [
+  's5', 's6', 's7', 's8', 's9', 's10', 's11', 's12', 's13', 'r1', 'r2',
+];
+
+/**
+ * Is docReason() settled yet? It needs her age and whether her periods have
+ * stopped. Mid-quiz the state is half empty, so this guards the exit from
+ * firing on an answer she has not given: a sixty-year-old is only 'late'
+ * once we know she is still bleeding.
+ *
+ * It deliberately does NOT wait on stopCause. Every screen the exit skips
+ * sits after s4b in FLOW, so by the time one is evaluated s4b has already
+ * been shown or skipped; and a stopped state with no cause given still
+ * routes to D, which must exit like any other.
+ */
+export function docDecided(S: QuizState): boolean {
+  return Boolean(S.age && S.periods);
+}
+
+/** Settled, and the answer is the doctor. */
+export function doctorExit(S: QuizState): boolean {
+  return docDecided(S) && stateKey(S) === 'D';
+}
+
 /**
  * Should this screen be skipped for this state?
  *
@@ -238,6 +265,12 @@ export const REVEAL: ScreenId[] = ['r1', 'r2', 'rDoc', 'r4', 'r4b', 'r5', 'r6', 
  */
 export function shouldSkip(S: QuizState, id: ScreenId): boolean {
   if (id === 's4b') return S.periods !== 'stopped';
+  /* THE DOCTOR EXIT. docReason() is settled by s2 (age), s4 (periods) and,
+     where she has stopped, s4b (why). The moment it is settled and the
+     answer is D, she leaves: no further questions, no name, NO EMAIL GATE,
+     and no reveal but rDoc. Taking an address from a woman we are about to
+     refuse, in order to market to her later, was the bug this closes. */
+  if (doctorExit(S) && EXIT_AT_S4B.includes(id)) return true;
   if (id === 's5') return S.periods === 'stopped';
   if (id === 'rDoc') return stateKey(S) !== 'D';
   if (id === 'r4' || id === 'r4b' || id === 'r5' || id === 'r6' || id === 'r7') {
@@ -249,23 +282,15 @@ export function shouldSkip(S: QuizState, id: ScreenId): boolean {
 /** The next screen after `from`, skipping whatever this state skips. */
 export function nextId(S: QuizState, from: ScreenId): ScreenId | undefined {
   let i = FLOW.indexOf(from) + 1;
-  while (i < FLOW.length) {
-    const id = FLOW[i]!;
-    if (!shouldSkip(S, id)) return id;
-    i++;
-  }
-  return undefined;
+  while (i < FLOW.length && shouldSkip(S, FLOW[i]!)) i++;
+  return FLOW[i];
 }
 
 /** The previous screen before `from`, skipping whatever this state skips. */
 export function prevId(S: QuizState, from: ScreenId): ScreenId | undefined {
   let i = FLOW.indexOf(from) - 1;
-  while (i >= 0) {
-    const id = FLOW[i]!;
-    if (!shouldSkip(S, id)) return id;
-    i--;
-  }
-  return undefined;
+  while (i > 0 && shouldSkip(S, FLOW[i]!)) i--;
+  return i >= 0 ? FLOW[i] : undefined;
 }
 
 /** Every screen this state will actually see, start to finish. */
@@ -283,5 +308,15 @@ export function path(S: QuizState): ScreenId[] {
 
 /* The only two places this funnel may send anyone. The doctor route goes to
    the brand site. It must never link to the shop. */
-export const SHOP_BASE = 'https://shop.jjsmithonline.com/products/hormonal-imbalance';
+/**
+ * The Shopify cart permalink: variant 41200079175791, quantity 1.
+ *
+ * `storefront=true` is what makes this the CART rather than the checkout.
+ * Drop it and Shopify takes her straight to payment, skipping the cart page
+ * — that is a different funnel and not the one we are running. shopUrl() in
+ * analytics.ts re-asserts the flag rather than trusting this string, so an
+ * edit here that loses it cannot quietly change the destination.
+ */
+export const SHOP_BASE =
+  'https://shop.jjsmithonline.com/cart/41200079175791:1?storefront=true';
 export const BRAND = 'https://www.jjsmithonline.com/';

@@ -20,12 +20,24 @@ export interface Lead {
   angle: string;
   answers: QuizState;
   attribution: Record<string, string>;
+  /** Recorded with the lead: what she actually agreed to, and when. */
+  consent: boolean;
   submittedAt: string;
 }
 
 export async function submitLead(
   S: QuizState, outcome: Outcome, angle: string,
 ): Promise<{ ok: boolean; delivered: boolean }> {
+  /* The last line of defence. The gate will not submit without consent, but
+     this module is what actually reaches the network, so it refuses too:
+     no ticked box, no request, whatever any caller believes. */
+  if (!S.consent) {
+    if (import.meta.env.DEV) {
+      console.warn('[leads] refused: no consent was given, so nothing was sent.');
+    }
+    return { ok: false, delivered: false };
+  }
+
   const lead: Lead = {
     name: S.name.trim(),
     email: S.email.trim(),
@@ -33,6 +45,7 @@ export async function submitLead(
     angle,
     answers: S,
     attribution: readAttribution(),
+    consent: S.consent,
     submittedAt: new Date().toISOString(),
   };
 
@@ -51,14 +64,16 @@ export async function submitLead(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(lead),
-      keepalive: true,
+      keepalive: true,       // survives the navigation to the next screen
     });
     return { ok: true, delivered: res.ok };
   } catch {
+    // Never block her from her result because a webhook is down.
     return { ok: true, delivered: false };
   }
 }
 
+/** Deliberately permissive. Rejecting a real address costs more than accepting a typo. */
 export function isEmail(v: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
 }

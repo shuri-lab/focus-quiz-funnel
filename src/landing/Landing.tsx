@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from '@tanstack/react-router';
-import { angleBySlug, angleTitle, type Angle } from '../lib/angles';
+import { angleBySlug, angleTitle } from '../lib/angles';
 import { usePageMeta } from '../lib/usePageMeta';
 import { track } from '../lib/analytics';
 import {
   REVIEWS, QUIZ_DISCLAIMER, FDA_DISCLAIMER, CUSTOMERS, CHIP_PROGRAMS, REVIEW_SOURCE,
+  HERO_IMG, HERO_ALT,
 } from '../lib/content';
 import { Stars } from '../components/icons';
 
-const CTA_LABEL = 'Get my hormone plan';
+const CTA_LABEL = 'GET MY HORMONE PLAN';
 const PRIVACY_LINE = 'Private, and no answer is ever shared.';
 
 function CheckMark() {
@@ -26,13 +27,14 @@ function Rate() {
   return <div className="rate"><Stars n={5} /><b>4.9</b></div>;
 }
 
-/* Two chips, as on the reference page. The first is per route: only /weight
-   may carry the 5M lbs figure. The second is scoped to JJ's programs, because
-   800,000 is books and challenges and never a Hormone Focus customer count. */
-function Chips({ angle }: { angle: Angle }) {
+/* The JJ programs chip shows on every route. The route chip shows only where
+   angles.ts gives it a value, which today is /weight and its 5M lbs figure.
+   The programs wording is scoped on purpose: 800,000 is books and challenges
+   and never a Hormone Focus customer count. Jane approved it on 15 Sept 2026. */
+function Chips({ chip1 }: { chip1: string }) {
   return (
     <div className="chips">
-      <span className="chip">{angle.chip1}</span>
+      {chip1 && <span className="chip">{chip1}</span>}
       <span className="chip">
         <span className="faces">
           {CUSTOMERS.slice(0, 3).map((src) => (
@@ -60,7 +62,7 @@ export function Landing({ slug }: { slug?: string | undefined }) {
   usePageMeta({
     title: angleTitle(angle),
     description: angle.description,
-    image: angle.hero,
+    image: HERO_IMG,
   });
 
   useEffect(() => { track.landingView(angle.slug); }, [angle.slug]);
@@ -80,46 +82,61 @@ export function Landing({ slug }: { slug?: string | undefined }) {
 
   const lead = REVIEWS[0]!;
 
+  /* Desktop layout. 'e' is the chosen one: the whole page on the hero's
+     left axis, with a background band per section. ?layout=a|b|c|d still
+     serves the rejected options for comparison; delete them and this
+     switch once 'e' is signed off. */
+  let layout = 'e';
+  try {
+    layout = new URLSearchParams(window.location.search).get('layout') ?? 'e';
+  } catch { /* no window */ }
+
   return (
-    <div className="app landing">
+    <div className="app landing" data-layout={layout}>
       <main className="appMain">
 
         {/* ------------------------------------------------ 1. HERO ----- */}
+        {/* The logo sits OUTSIDE .hero, as in the source file: on desktop the
+            hero becomes two columns and the lockup stays above both. */}
         <section className="lpHero">
-          <div className="container">
+          <div className="screen">
             <div className="lpLogo">
               <b>HORMONE<i>FOCUS</i></b>
               <span>by JJ Smith</span>
             </div>
 
-            <Chips angle={angle} />
+            <div className="hero">
+              <div className="herocopy">
+                <Chips chip1={angle.chip1} />
 
-            <h1 className="lpH1">{angle.h1a} <em>{angle.h1b}</em></h1>
-            <p className="lpSub">({angle.paren}).</p>
+                <h1 className="lpH1">{angle.h1a} <em>{angle.h1b}</em></h1>
+                <p className="lpSub">({angle.paren}).</p>
 
-            <div className="getline">
-              <CheckMark />
-              <p>Get your <u>free personal</u> hormone plan in <u>2 minutes</u></p>
+                <div className="getline">
+                  <CheckMark />
+                  <p>Get your <u>free personal</u> hormone plan in <u>2 minutes</u></p>
+                </div>
+
+                {/* .heroCta is the hook e2e/funnel.spec.ts uses to find the
+                    first button and to assert exactly one CTA is on screen. */}
+                <div className="heroCta">
+                  <Link className="cta" to={quizHref as string} ref={heroCta}>{CTA_LABEL} &nbsp;&rarr;</Link>
+                </div>
+                <Rate />
+                <p className="priv">{PRIVACY_LINE}</p>
+              </div>
+
+              <div className="heroimg">
+                <img src={HERO_IMG} alt={HERO_ALT} width={760} height={636}
+                  fetchPriority="high" decoding="async" />
+              </div>
             </div>
-
-            {/* .heroCta is the hook e2e/funnel.spec.ts uses to find the
-                first button and to assert exactly one CTA is ever visible. */}
-            <div className="heroCta">
-              <Link className="cta" to={quizHref} ref={heroCta}>{CTA_LABEL} &nbsp;&rarr;</Link>
-            </div>
-            <Rate />
-            <p className="priv">{PRIVACY_LINE}</p>
-          </div>
-
-          <div className="heroimg">
-            <img src={angle.hero} alt={angle.heroAlt} width={760} height={636}
-              fetchPriority="high" decoding="async" />
           </div>
         </section>
 
         {/* ----------------------------------- 2. WHAT IS GOING ON ----- */}
         <section className="lpSec first">
-          <div className="container">
+          <div className="screen">
             <p className="eyebrow">Step one</p>
             <h2 className="sech">First, find out what is <em>really going on</em></h2>
             <ul className="recogbox">
@@ -132,10 +149,13 @@ export function Landing({ slug }: { slug?: string | undefined }) {
 
         {/* --------------------------------------- 3. HOW IT WORKS ----- */}
         <section className="lpSec">
-          <div className="container">
+          <div className="screen">
             <p className="eyebrow">How it works</p>
             <h2 className="sech">Three steps, <em>two minutes</em></h2>
 
+            {/* Wrapper so the three steps can sit side by side once there is
+                room. Named lpSteps: .steps already belongs to the offer screen. */}
+            <div className="lpSteps">
             <div className="step">
               <span className="stepn">1</span>
               <div>
@@ -157,6 +177,7 @@ export function Landing({ slug }: { slug?: string | undefined }) {
                 <span>What fits your stage, and what to do next.</span>
               </div>
             </div>
+            </div>
 
             <Cta to={quizHref} />
           </div>
@@ -164,7 +185,7 @@ export function Landing({ slug }: { slug?: string | undefined }) {
 
         {/* --------------------------------------- 4. SOCIAL PROOF ----- */}
         <section className="lpSec">
-          <div className="container">
+          <div className="screen">
             <p className="eyebrow">Real women</p>
             <h2 className="sech">Women who could not <em>name it either</em></h2>
 
@@ -186,7 +207,7 @@ export function Landing({ slug }: { slug?: string | undefined }) {
 
         {/* --------------------------------------------- 5. CLOSER ----- */}
         <section className="lpSec">
-          <div className="container">
+          <div className="screen">
             <h2 className="sech">Ready to find out what is <em>really going on?</em></h2>
             <p className="secBody">
               Take the two-minute check and get your personal hormone plan, free.
@@ -195,15 +216,10 @@ export function Landing({ slug }: { slug?: string | undefined }) {
             <Cta to={quizHref} />
             <p className="priv">{PRIVACY_LINE}</p>
 
+            {/* Both sentences, on every route. The brief makes this non-negotiable. */}
             <div className="fine">
               <p>{QUIZ_DISCLAIMER}</p>
               <p>{FDA_DISCLAIMER}</p>
-              <p>
-                &copy; {new Date().getFullYear()} JJ Smith &middot;{' '}
-                <a href="https://www.jjsmithonline.com/" target="_blank" rel="noopener noreferrer">
-                  jjsmithonline.com
-                </a>
-              </p>
             </div>
           </div>
         </section>
