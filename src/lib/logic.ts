@@ -282,14 +282,14 @@ export function shouldSkip(S: QuizState, id: ScreenId): boolean {
 /** The next screen after `from`, skipping whatever this state skips. */
 export function nextId(S: QuizState, from: ScreenId): ScreenId | undefined {
   let i = FLOW.indexOf(from) + 1;
-  while (i < FLOW.length && shouldSkip(S, FLOW[i])) i++;
+  while (i < FLOW.length && shouldSkip(S, FLOW[i]!)) i++;
   return FLOW[i];
 }
 
 /** The previous screen before `from`, skipping whatever this state skips. */
 export function prevId(S: QuizState, from: ScreenId): ScreenId | undefined {
   let i = FLOW.indexOf(from) - 1;
-  while (i > 0 && shouldSkip(S, FLOW[i])) i--;
+  while (i > 0 && shouldSkip(S, FLOW[i]!)) i--;
   return i >= 0 ? FLOW[i] : undefined;
 }
 

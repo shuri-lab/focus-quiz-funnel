@@ -81,7 +81,7 @@ export function initClarity(): void {
       t.async = true;
       t.src = 'https://www.clarity.ms/tag/' + i;
       const y = l.getElementsByTagName(r)[0];
-      y.parentNode?.insertBefore(t, y);
+      y?.parentNode?.insertBefore(t, y);
     })(window, document, 'clarity', 'script', CLARITY_ID);
   } catch { /* tracking must never break the funnel */ }
 }
@@ -193,12 +193,12 @@ export function shopUrl(base: string, outcome: string, angle: string): string {
   url.searchParams.set('storefront', 'true');
 
   url.searchParams.set('src', 'quiz');
-  url.searchParams.set('utm_source', ad.utm_source ?? 'quiz');
-  url.searchParams.set('utm_medium', ad.utm_medium ?? 'owned');
-  url.searchParams.set('utm_campaign', ad.utm_campaign ?? 'hormone_check');
-  url.searchParams.set('utm_content', ad.utm_content ?? `offer_screen__${outcome}`);
+  url.searchParams.set('utm_source', ad['utm_source'] ?? 'quiz');
+  url.searchParams.set('utm_medium', ad['utm_medium'] ?? 'owned');
+  url.searchParams.set('utm_campaign', ad['utm_campaign'] ?? 'hormone_check');
+  url.searchParams.set('utm_content', ad['utm_content'] ?? `offer_screen__${outcome}`);
 
-  const term = ad.utm_term ?? angle;
+  const term = ad['utm_term'] ?? angle;
   if (term) url.searchParams.set('utm_term', term);
 
   /* Pass-through, only when the ad actually set them. */
@@ -210,6 +210,6 @@ export function shopUrl(base: string, outcome: string, angle: string): string {
      through does not cost us the outcome attribution. */
   url.searchParams.set('hf_outcome', outcome);
 
-  if (ad.fbclid) url.searchParams.set('fbclid', ad.fbclid);
+  if (ad['fbclid']) url.searchParams.set('fbclid', ad['fbclid']);
   return url.toString();
 }
