@@ -13,6 +13,7 @@ declare global {
     fbq?: (...args: unknown[]) => void;
     gtag?: (...args: unknown[]) => void;
     dataLayer?: unknown[];
+    clarity?: (...args: unknown[]) => void;
   }
 }
 
@@ -23,6 +24,7 @@ function push(event: string, props: Props = {}) {
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ event, ...props });
     window.gtag?.('event', event, props);
+    clarity(event, props);
   } catch { /* tracking must never break the funnel */ }
 }
 
@@ -30,6 +32,67 @@ function push(event: string, props: Props = {}) {
 function meta(name: string, props: Props = {}, standard = false) {
   try {
     window.fbq?.(standard ? 'track' : 'trackCustom', name, props);
+  } catch { /* as above */ }
+}
+
+/* -------------------------------------------------------- SPA pageviews -- */
+
+/**
+ * A virtual pageview for GTM.
+ *
+ * The container script in index.html runs once, on the first HTML document.
+ * Every navigation after that is client-side — React Router swaps the tree
+ * and the browser never requests a new document — so GTM's built-in Page View
+ * trigger never fires again. This push is what makes the later routes visible.
+ *
+ * IN THE CONTAINER: trigger page tags on the Custom Event `page_view`, NOT on
+ * the built-in Page View, or the first route counts twice: once from the
+ * container loading and once from here.
+ */
+export function pageView(path: string, title: string): void {
+  push('page_view', {
+    page_path: path,
+    page_location: window.location.href,
+    page_title: title,
+  });
+}
+
+/* ------------------------------------------------------------ clarity -- */
+
+const CLARITY_ID = import.meta.env.VITE_CLARITY_ID as string | undefined;
+
+/**
+ * Microsoft Clarity. Injected once, and only when VITE_CLARITY_ID is set, so
+ * an unconfigured build ships no third-party script at all. Same contract as
+ * fbq everywhere else in this file: if it is absent, every call is a no-op.
+ */
+export function initClarity(): void {
+  try {
+    if (!CLARITY_ID || window.clarity) return;
+    /* Microsoft's own snippet, as a function rather than an inline tag. */
+    (function (c: Window, l: Document, a: string, r: string, i: string) {
+      (c as unknown as Record<string, unknown>)[a] =
+        (c as unknown as Record<string, unknown>)[a] ||
+        function (...args: unknown[]) {
+          (((c as unknown as Record<string, unknown>)[a] as { q?: unknown[] }).q ||=
+            []).push(args);
+        };
+      const t = l.createElement(r) as HTMLScriptElement;
+      t.async = true;
+      t.src = 'https://www.clarity.ms/tag/' + i;
+      const y = l.getElementsByTagName(r)[0];
+      y.parentNode?.insertBefore(t, y);
+    })(window, document, 'clarity', 'script', CLARITY_ID);
+  } catch { /* tracking must never break the funnel */ }
+}
+
+/** A Clarity custom event. No-op when Clarity is absent. */
+function clarity(name: string, props: Props = {}) {
+  try {
+    window.clarity?.('event', name);
+    for (const [k, v] of Object.entries(props)) {
+      window.clarity?.('set', k, String(v));
+    }
   } catch { /* as above */ }
 }
 
@@ -83,6 +146,8 @@ export const track = {
 const AD_PARAMS = [
   'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term',
   'fbclid', 'gclid', 'ttclid', 'src',
+  /* Funnel and variant, so a split test can be read on the Shopify side. */
+  'hf_funnel', 'hf_variant',
 ];
 
 const STORE_KEY = 'hf_attribution';
@@ -109,16 +174,42 @@ export function readAttribution(): Record<string, string> {
   }
 }
 
-/** The shop link, carrying the quiz outcome and whatever the ad sent us. */
+/**
+ * The cart link, carrying the quiz outcome and whatever the ad sent us.
+ *
+ * WHAT THE AD SENT WINS. If she arrived with a utm_content, that is the value
+ * the ad account is reporting on and it is carried through untouched; the
+ * quiz's own value is only a fallback for traffic that arrived with none.
+ * The outcome is never lost either way, because hf_outcome always carries it.
+ *
+ * `storefront=true` is set explicitly rather than inherited from the base, so
+ * this cannot silently become the direct-to-checkout link.
+ */
 export function shopUrl(base: string, outcome: string, angle: string): string {
   const url = new URL(base);
-  const attribution = readAttribution();
+  const ad = readAttribution();
+
+  /* The cart, not the checkout. Asserted here, not assumed from the base. */
+  url.searchParams.set('storefront', 'true');
+
   url.searchParams.set('src', 'quiz');
-  url.searchParams.set('utm_source', attribution['utm_source'] ?? 'quiz');
-  url.searchParams.set('utm_medium', attribution['utm_medium'] ?? 'owned');
-  url.searchParams.set('utm_campaign', attribution['utm_campaign'] ?? 'hormone_check');
-  url.searchParams.set('utm_content', `offer_screen__${outcome}`);
-  if (angle) url.searchParams.set('utm_term', angle);
-  if (attribution['fbclid']) url.searchParams.set('fbclid', attribution['fbclid']);
+  url.searchParams.set('utm_source', ad.utm_source ?? 'quiz');
+  url.searchParams.set('utm_medium', ad.utm_medium ?? 'owned');
+  url.searchParams.set('utm_campaign', ad.utm_campaign ?? 'hormone_check');
+  url.searchParams.set('utm_content', ad.utm_content ?? `offer_screen__${outcome}`);
+
+  const term = ad.utm_term ?? angle;
+  if (term) url.searchParams.set('utm_term', term);
+
+  /* Pass-through, only when the ad actually set them. */
+  for (const key of ['hf_funnel', 'hf_variant'] as const) {
+    if (ad[key]) url.searchParams.set(key, ad[key]);
+  }
+
+  /* The quiz result, kept in its own param so carrying the ad's utm_content
+     through does not cost us the outcome attribution. */
+  url.searchParams.set('hf_outcome', outcome);
+
+  if (ad.fbclid) url.searchParams.set('fbclid', ad.fbclid);
   return url.toString();
 }

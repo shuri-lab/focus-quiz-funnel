@@ -692,7 +692,7 @@ h1, h2 { margin: 0; text-wrap: balance; letter-spacing: -.022em; line-height: 1.
    and content.ts. Mobile-first, single column, one button per section. */
 
 .landing .appMain { padding: 0; }
-.landing .container { max-width: 560px; margin-inline: auto; padding-inline: var(--gutter); }
+.landing .screen { padding: 22px 20px 26px; }
 
 .lpHero { padding: 22px 0 0; }
 .lpLogo { text-align: center; margin: 4px 0 15px; }
@@ -736,7 +736,10 @@ h1, h2 { margin: 0; text-wrap: balance; letter-spacing: -.022em; line-height: 1.
   background: linear-gradient(transparent 62%, var(--wash-2) 62%);
 }
 
-.landing .cta { width: 100%; max-width: none; margin-top: 16px; }
+.landing .cta {
+  width: 100%; max-width: none; margin-top: 16px;
+  font-size: 13.5px; font-weight: 700; letter-spacing: .05em;
+}
 .landing .heroCta { max-width: none; }
 
 .rate { display: flex; align-items: center; justify-content: center; gap: 5px; margin: 11px 0 0; }
@@ -754,7 +757,7 @@ h1, h2 { margin: 0; text-wrap: balance; letter-spacing: -.022em; line-height: 1.
   padding: 26px 0 0; border-top: 1px solid var(--line);
   margin-top: 24px; text-align: center;
 }
-.lpSec.first { border-top: 0; margin-top: 22px; padding-top: 0; }
+.landing .lpSec.first { border-top: 0; margin-top: 22px; padding-top: 0; }
 .landing .eyebrow {
   font-size: 10.5px; font-weight: 700; letter-spacing: .11em;
   text-transform: uppercase; color: var(--plum); margin: 0 0 8px;
@@ -781,13 +784,13 @@ h1, h2 { margin: 0; text-wrap: balance; letter-spacing: -.022em; line-height: 1.
      so the inherited box is cleared rather than left to leak through. */
   padding: 0; background: none; border: 0; border-radius: 0;
 }
-.landing .stepn {
+.landing .step .stepn {
   flex: 0 0 auto; width: 27px; height: 27px; border-radius: 50%;
   background: var(--plum); color: #fff; font-size: 13px; font-weight: 700;
   line-height: 1; display: flex; align-items: center; justify-content: center;
 }
 .landing .step b { display: block; font-size: 14.5px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
-.landing .step span {
+.landing .step div span {
   display: block; font-family: var(--serif); font-size: var(--t-sub);
   line-height: 1.4; color: var(--ink-2);
 }
@@ -800,6 +803,8 @@ h1, h2 { margin: 0; text-wrap: balance; letter-spacing: -.022em; line-height: 1.
 .landing .rev {
   font-family: var(--serif); font-size: var(--t-body);
   line-height: 1.44; color: var(--ink); margin: 14px 0 8px;
+  /* the offer screen's .rev is a bordered white card; this one is plain text */
+  background: none; border: 0; padding: 0; box-shadow: none; border-radius: 0;
 }
 .revwho { font-size: 12.5px; color: var(--ink-2); font-weight: 600; margin: 0; }
 .tiny { font-size: 10.5px; line-height: 1.5; color: var(--ink-3); margin: 10px 0 0; }
@@ -811,9 +816,223 @@ h1, h2 { margin: 0; text-wrap: balance; letter-spacing: -.022em; line-height: 1.
 .landing .fine p { font-size: 9.5px; line-height: 1.55; color: var(--ink-3); margin: 0 0 8px; }
 .landing .fine a { color: var(--ink-2); }
 
-/* The reference page is a single phone column. Past that width it centres
-   rather than stretching, so the measure never runs long. */
-@media (min-width: 620px) {
-  .heroimg img { border-radius: var(--radius-lg); }
-  .lpHero > .heroimg { max-width: 560px; margin-inline: auto; padding-inline: var(--gutter); }
+/* ------------------------------------------------- desktop, 760px -----
+   The source file uses a container query so the harness can preview both
+   widths in one window. In production the container IS the page, so a plain
+   media query behaves identically. The rules inside are the same either way. */
+@media (min-width: 760px) {
+  .landing .screen { padding: 38px 40px 44px; max-width: 1080px; margin: 0 auto; }
+
+  .landing .lpLogo { text-align: left; margin-bottom: 22px; }
+
+  /* Left-aligned, but still ONE column here. Two columns at this width gave
+     the copy 317px to hold a 46px headline, which is what read as squeezed.
+     Held to the same measure as the sections so the hero does not sprawl and
+     over-crop the photograph into a zoomed face. */
+  /* Capped so the photograph does not sprawl, but left-aligned rather than
+     centred: the page runs on one left axis and the hero sets it. */
+  .landing .hero { text-align: left; max-width: 680px; margin-left: 0; margin-right: auto; }
+  .landing .hero .chips { justify-content: flex-start; }
+  .landing .lpH1 { font-size: 46px; margin-top: 22px; }
+  .landing .lpSub { font-size: 20px; }
+  .landing .getline p { font-size: 17px; }
+  .landing .rate { justify-content: flex-start; }
+  .landing .priv { text-align: left; }
+
+  /* Full width under the copy until there is room for a second column. */
+  .landing .heroimg { margin: 22px 0 0; border-radius: 20px; overflow: hidden; }
+  /* The source photograph is a portrait selfie. Mobile crops it at about
+     1.5:1, which keeps the bottle in frame; a 2:1 banner at this width
+     zoomed into the face alone, so the height rises with the width. */
+  .landing .heroimg img { height: 440px; object-position: center 28%; }
+
+  /* Buttons stop short of full bleed. */
+  .landing .cta {
+    max-width: 360px; margin-left: 0; margin-right: 0;
+    padding: 18px; font-size: 14.5px;
+  }
+  /* but stay centred inside the centred sections */
+  .landing .lpSec .cta { margin-left: auto; margin-right: auto; }
+
+  /* The hero is the only full-width block, so it does not also need the
+     screen's bottom padding: that was stacking with the section gap and
+     leaving a void between the photograph and Step one. */
+  .landing .lpHero .screen { padding-bottom: 0; }
+
+  /* Sections centre at a readable measure rather than stretching. */
+  .landing .lpSec {
+    max-width: 680px; margin-left: auto; margin-right: auto;
+    padding-top: 34px; margin-top: 34px;
+  }
+  .landing .lpSec.first { margin-top: 30px; padding-top: 0; }
+  .landing .sech { font-size: 30px; }
+  .landing .recogbox li { font-size: 17px; }
+  /* Six across, per the brief. The 680px cap is there to hold TEXT to a
+     readable measure; at that width six photographs become 94px thumbnails,
+     so the grid alone breaks out to a width that lets them read as faces. */
+  .landing .proofGrid {
+    grid-template-columns: repeat(6, 1fr);
+    width: 940px; max-width: calc(100vw - 80px);
+    margin-left: 50%; transform: translateX(-50%);
+    gap: 10px;
+  }
+  .landing .step { max-width: 520px; margin-left: auto; margin-right: auto; }
+  .landing .fine { max-width: 680px; margin-left: auto; margin-right: auto; }
 }
+
+
+/* ------------------------------------------------ wide, 1000px -------
+   Only now is there room for a second column beside the copy. Below this
+   the hero stacks: two columns at 760px left the headline 317px to live
+   in, which is what made the page feel squeezed. */
+@media (min-width: 1000px) {
+  .landing .hero {
+    display: grid; grid-template-columns: 1.05fr .95fr;
+    gap: 46px; align-items: center;
+    max-width: none; margin-inline: 0;
+  }
+  .landing .heroimg {
+    margin: 0; grid-row: 1 / 3; grid-column: 2; align-self: stretch;
+    position: relative; min-height: 400px;
+  }
+  .landing .heroimg img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%; min-height: 0; border-radius: 0;
+  }
+
+  /* The three steps sit side by side rather than stacking down a narrow
+     column. Each one's text stays short, so the 680px measure that protects
+     prose is not what is doing the work here. */
+  .landing .lpSteps {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 26px; width: 940px; max-width: calc(100vw - 80px);
+    margin-left: 50%; transform: translateX(-50%); margin-top: 22px;
+  }
+  .landing .lpSteps .step {
+    display: block; text-align: center; margin-bottom: 0; max-width: none;
+  }
+  .landing .lpSteps .step .stepn { margin: 0 auto 10px; }
+  .landing .lpSteps .step div span { margin-top: 2px; }
+}
+
+/* =============================== LAYOUT EXPERIMENTS, desktop only =====
+   Four desktop treatments, switched with ?layout=a|b|c|d so they can be
+   compared live. 'a' is the current page and needs no rules.
+   DELETE THIS BLOCK and the data-layout attribute once one is chosen. */
+@media (min-width: 1000px) {
+
+  /* ---- B: full-bleed alternating bands ----------------------------
+     Same measure, but each section gets an edge. Rhythm without any
+     change to line length. */
+  .landing[data-layout='b'] .lpSec {
+    max-width: none; width: 100vw;
+    margin-left: 50%; transform: translateX(-50%);
+    border-top: 0; margin-top: 0;
+    padding: 56px clamp(24px, 6vw, 80px);
+  }
+  .landing[data-layout='b'] .lpSec > * { max-width: 680px; margin-inline: auto; }
+  .landing[data-layout='b'] .lpSec:nth-of-type(even) { background: var(--surface); }
+  .landing[data-layout='b'] .lpSec:nth-of-type(odd) { background: var(--wash); }
+  .landing[data-layout='b'] .lpSteps,
+  .landing[data-layout='b'] .proofGrid { max-width: 940px; width: 940px; margin-left: auto; margin-right: auto; transform: none; }
+
+  /* ---- C: cards on a tinted ground --------------------------------
+     Each section becomes a panel. This is the "more cards" instinct. */
+  .landing[data-layout='c'] { background: var(--frame); }
+  .landing[data-layout='c'] .lpSec {
+    max-width: 920px; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 22px;
+    box-shadow: var(--shadow); border-top: 1px solid var(--line);
+    padding: 44px clamp(28px, 4vw, 56px); margin-top: 26px;
+  }
+  .landing[data-layout='c'] .lpSec > *:not(.lpSteps):not(.proofGrid) { max-width: 640px; margin-inline: auto; }
+  .landing[data-layout='c'] .lpSteps,
+  .landing[data-layout='c'] .proofGrid { width: auto; max-width: none; margin-left: 0; transform: none; }
+  .landing[data-layout='c'] .lpSec.first { margin-top: 26px; padding-top: 44px; }
+  .landing[data-layout='c'] .fine { background: none; box-shadow: none; }
+
+  /* ---- D: wider editorial measure, left-aligned --------------------
+     Stops the centred-ribbon look by widening the measure and setting
+     the page ragged-right instead of centred. */
+  .landing[data-layout='d'] .lpSec {
+    max-width: 860px; text-align: left;
+    padding-top: 44px; margin-top: 44px;
+  }
+  .landing[data-layout='d'] .sech { font-size: 34px; }
+  .landing[data-layout='d'] .eyebrow,
+  .landing[data-layout='d'] .rate,
+  .landing[data-layout='d'] .priv,
+  .landing[data-layout='d'] .revwho,
+  .landing[data-layout='d'] .tiny { text-align: left; justify-content: flex-start; }
+  .landing[data-layout='d'] .lpSec .cta { margin-left: 0; margin-right: 0; }
+  .landing[data-layout='d'] .recogbox li { font-size: 19px; }
+  .landing[data-layout='d'] .lpSteps,
+  .landing[data-layout='d'] .proofGrid {
+    width: 100%; max-width: none; margin-left: 0; transform: none;
+  }
+  .landing[data-layout='d'] .lpSteps .step { text-align: left; }
+  .landing[data-layout='d'] .lpSteps .step .stepn { margin: 0 0 10px; }
+  .landing[data-layout='d'] .fine { max-width: none; }
+
+  /* E's steps go side by side only once there is room for three columns. */
+  .landing[data-layout='e'] .lpSteps {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px;
+  }
+  .landing[data-layout='e'] .lpSteps .step { text-align: left; }
+  .landing[data-layout='e'] .lpSteps .step .stepn { margin: 0 0 10px; }
+
+}
+
+
+/* ---- E: the chosen desktop layout, from 760px ------------------------
+   The hero copy is left-aligned, so centring everything beneath it fought
+   the hero. E puts the whole page on ONE left axis and gives each section
+   a background band, which is the edge that flat centred prose lacked.
+   The inner wrapper matches .screen exactly so the axis is shared; prose
+   is capped inside it rather than centred, so the measure stays readable
+   without moving that axis. */
+@media (min-width: 760px) {
+  .landing[data-layout='e'] .lpSec {
+    max-width: none; width: 100vw;
+    margin-left: 50%; transform: translateX(-50%);
+    border-top: 0; margin-top: 0; text-align: left;
+    padding: 58px 0;
+  }
+  .landing[data-layout='e'] .lpSec > * {
+    max-width: 1080px; margin-inline: auto;
+    /* exactly .screen's padding, or the axis drifts by a couple of pixels */
+    padding-inline: 40px;
+  }
+  .landing[data-layout='e'] .lpSec:nth-of-type(even) { background: var(--surface); }
+  .landing[data-layout='e'] .lpSec:nth-of-type(odd) { background: var(--wash); }
+
+  .landing[data-layout='e'] .sech,
+  .landing[data-layout='e'] .secBody,
+  .landing[data-layout='e'] .recogbox,
+  .landing[data-layout='e'] .rev,
+  .landing[data-layout='e'] .fine {
+    max-width: 860px; margin-left: 0; margin-right: auto;
+  }
+  .landing[data-layout='e'] .sech { font-size: 34px; }
+  .landing[data-layout='e'] .recogbox li { font-size: 19px; }
+  .landing[data-layout='e'] .eyebrow,
+  .landing[data-layout='e'] .rate,
+  .landing[data-layout='e'] .priv,
+  .landing[data-layout='e'] .revwho,
+  .landing[data-layout='e'] .tiny { text-align: left; justify-content: flex-start; }
+  .landing[data-layout='e'] .lpSec .cta { margin-left: 0; margin-right: 0; }
+  .landing[data-layout='e'] .lpSteps,
+  .landing[data-layout='e'] .proofGrid {
+    width: auto; max-width: 1080px;
+    margin-left: auto; margin-right: auto; transform: none;
+  }
+}
+
+/* The opt-in on the email gate. Unticked, and required before submit. */
+.consent { display: flex; gap: 10px; align-items: flex-start; margin: 14px 0 0; cursor: pointer; }
+.consentBox {
+  flex: 0 0 auto; width: 20px; height: 20px; margin: 1px 0 0;
+  accent-color: var(--plum); cursor: pointer;
+}
+.consent span { font-size: var(--t-sub); line-height: 1.4; color: var(--ink-2); }
+.consentBox[aria-invalid='true'] { outline: 2px solid var(--load); outline-offset: 2px; }
