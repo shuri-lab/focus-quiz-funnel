@@ -49,11 +49,10 @@ function Chips({ chip1 }: { chip1: string }) {
 
 /** Closes every section, as the reference page does. */
 function Cta({ to }: { to: string }) {
-  return <Link className="cta" to={to}>{CTA_LABEL} &nbsp;&rarr;</Link>;
+  return <Link className="cta" to={to as string}>{CTA_LABEL} &nbsp;&rarr;</Link>;
 }
 
-export function Landing() {
-  const { slug } = useParams();
+export function Landing({ slug }: { slug?: string | undefined }) {
   const angle = angleBySlug(slug);
   const quizHref = angle.slug ? `/${angle.slug}/quiz` : '/quiz';
 
@@ -74,14 +73,14 @@ export function Landing() {
     const el = heroCta.current;
     if (!el) return;
     const io = new IntersectionObserver(
-      ([entry]) => setShowSticky(!entry.isIntersecting),
+      ([entry]) => setShowSticky(!entry!.isIntersecting),
       { threshold: 0 },
     );
     io.observe(el);
     return () => io.disconnect();
   }, []);
 
-  const lead = REVIEWS[0];
+  const lead = REVIEWS[0]!;
 
   /* Desktop layout. 'e' is the chosen one: the whole page on the hero's
      left axis, with a background band per section. ?layout=a|b|c|d still
@@ -121,7 +120,7 @@ export function Landing() {
                 {/* .heroCta is the hook e2e/funnel.spec.ts uses to find the
                     first button and to assert exactly one CTA is on screen. */}
                 <div className="heroCta">
-                  <Link className="cta" to={quizHref} ref={heroCta}>{CTA_LABEL} &nbsp;&rarr;</Link>
+                  <Link className="cta" to={quizHref as string} ref={heroCta}>{CTA_LABEL} &nbsp;&rarr;</Link>
                 </div>
                 <Rate />
                 <p className="priv">{PRIVACY_LINE}</p>
