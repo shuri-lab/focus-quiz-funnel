@@ -72,7 +72,7 @@ export function pageView(path: string, title: string): void {
  * a throwaway project instead of recording into the real one.
  */
 const CLARITY_ID =
-  (import.meta.env.VITE_CLARITY_ID as string | undefined) || 'yk2cnbfcxa';
+  (import.meta.env['VITE_CLARITY_ID'] as string | undefined) || 'yk2cnbfcxa';
 
 /**
  * Microsoft Clarity. Injected once — the window.clarity guard is what makes a

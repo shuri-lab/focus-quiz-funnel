@@ -4,6 +4,8 @@
 
 /* Hormone Focus funnel styles — ported from the original design system. */
 @import "./styles/global.css";
+@import "./styles/offer.css";
+@import "./styles/offer-cards.css";
 
 @custom-variant dark (&:is(.dark *));
 
