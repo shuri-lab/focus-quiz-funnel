@@ -148,9 +148,9 @@ export const PLANS: Record<Archetype, PlanVersion> = {
     stage: 'early menopause',
     result: 'Your answers point to menopause earlier than most: your periods have stopped, and your body is running on less estrogen than it did. You said yes to {count}. They are one stage, not {signs} problems.',
     going: [
-      MENOPAUSE_GOING[0],
+      MENOPAUSE_GOING[0]!,
       'Because this has come earlier than most, it is worth a conversation with your doctor about what else is worth checking, alongside the support here.',
-      MENOPAUSE_GOING[2],
+      MENOPAUSE_GOING[2]!,
     ],
     week: 'Protein at every meal, not just breakfast, because muscle is what keeps the weight off now. Ten minutes of walking after dinner, every day. Layers you can take off, and a fan by the bed, because the flash passes faster when you stop fighting it.',
     howTo: HOW_TO_BREAKFAST,

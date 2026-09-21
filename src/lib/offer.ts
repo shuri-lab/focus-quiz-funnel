@@ -135,7 +135,7 @@ export interface OfferOption {
   /** The small line under the price. */
   priceNote: string;
   /** The pill beside the title, where there is one. */
-  badge?: string;
+  badge?: string | undefined;
 }
 
 const SINGLE_OPTION: OfferOption = {
@@ -234,7 +234,7 @@ export interface OfferCard {
   /** Named, pictured, and never handed over before she has bought. */
   bonus?: string;
   cta: string;
-  badge?: string;
+  badge?: string | undefined;
   /** Which product shot sits at the top. */
   shot: string;
   /** The guide shot beside it, on the plan that includes it. */

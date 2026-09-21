@@ -99,7 +99,7 @@ export function initClarity(): void {
       t.async = true;
       t.src = 'https://www.clarity.ms/tag/' + i;
       const y = l.getElementsByTagName(r)[0];
-      y.parentNode?.insertBefore(t, y);
+      if (y) y.parentNode?.insertBefore(t, y);
     })(window, document, 'clarity', 'script', CLARITY_ID);
   } catch { /* tracking must never break the funnel */ }
 }
