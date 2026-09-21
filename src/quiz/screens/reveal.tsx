@@ -6,6 +6,7 @@ import {
   score, stateKey,
 } from '../../lib/logic';
 import { DOC, IMG, QUIZ_DISCLAIMER, VERDICT } from '../../lib/content';
+import { GuideCard } from '../../components/BuyOptions';
 
 function displayName(name: string) {
   return name.trim() || 'you';
@@ -16,6 +17,7 @@ function displayName(name: string) {
 export function R1() {
   const { S, next } = useQuiz();
   const v = VERDICT[stateKey(S)];
+  const outcome = stateKey(S);
 
   return (
     <Screen id="r1">
@@ -44,6 +46,11 @@ export function R1() {
           </p>
         </div>
       )}
+
+      {/* What the guide is, not a link to it. The result above is hers for
+          finishing the check; the guide comes with the bottles. The doctor
+          route sees neither, because it sees no offer at all. */}
+      {outcome !== 'D' && <GuideCard />}
 
       <ActionBar>
         <button type="button" className="cta" onClick={() => next()}>Show me how you know &rarr;</button>
@@ -125,7 +132,7 @@ export function R2() {
 export function RDoc() {
   const { S, restart } = useQuiz();
   const reason = docReason(S) || 'young';
-  const copy = DOC[reason]!;
+  const copy = DOC[reason];
   const picked = TILES.filter(([id]) => has(S, id)).map(([, label]) => label.toLowerCase());
   const list = picked.length ? picked.join(', ') : 'what you described';
 

@@ -5,7 +5,8 @@
  *  - Every product claim is JJ's own published wording. No timeframes,
  *    no quantified results, no invented percentages.
  *  - 800,000 is scoped to books and challenges, NOT supplement buyers.
- *  - 169 is the Hormone Focus review count. It belongs beside 4.9, nowhere else.
+ *  - The Hormone Focus review count lives in reviews.ts, and belongs beside
+ *    the 4.9 and nowhere else.
  */
 import type { QuizState, SymptomId, TriedId, MarkerId, MoodId, Severity, Outcome } from './logic';
 import { masked, docReason } from './logic';
@@ -55,7 +56,7 @@ export const SHORT: Record<SymptomId, string> = {
 export function symPhrase(S: QuizState): string {
   const l = S.sym.map((k) => SHORT[k]).filter(Boolean);
   if (!l.length) return 'everything you have told me so far';
-  if (l.length === 1) return l[0]!;
+  if (l.length === 1) return l[0];
   if (l.length === 2) return `${l[0]} and ${l[1]}`;
   return l.slice(0, 2).join(', ') + ' and ' + (l.length > 3 ? `${l.length - 2} more symptoms` : l[2]);
 }

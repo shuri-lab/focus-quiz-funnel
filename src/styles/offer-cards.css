@@ -1,0 +1,395 @@
+/* The three offer cards, ported from Jane's landing page and repainted in the
+   funnel's own tokens rather than carrying a second palette across.
+ *
+ * The layout it replaces was a radio group: three rows feeding one button.
+ * That asks her to hold a selection in her head while she reads the other two.
+ * These are three complete offers, each ending in its own button, which is
+ * why the screen reads quieter despite carrying more ink.
+ *
+ * Mobile first. One column with "or" between the cards on a phone, three
+ * across on a desktop, where the wrap breaks out of the reading column
+ * because three cards do not fit inside 640px and should not try. */
+
+.ocWrap { width: 100%; margin-top: clamp(26px, 7vw, 34px); }
+
+.ocGrid { display: grid; gap: 0; }
+
+/* ------------------------------------------------------------- the card -- */
+
+.ocCol { display: flex; flex-direction: column; }
+
+.oc {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 18px;
+  padding: 18px 16px;
+}
+
+/* The one we sell. A second border weight and a wash, not a third colour. */
+.oc-protocol {
+  background: linear-gradient(165deg, var(--surface) 0%, var(--wash) 100%);
+  border: 2px solid var(--plum);
+  box-shadow: var(--lift);
+}
+
+/* THE BADGE HANGS OVER THE TOP EDGE, so any card wearing one needs the room
+   for it. This was on .oc-protocol alone, which is why "Best value" sat on
+   the subscription's own first line at every phone width. */
+.oc-badged { padding-top: 30px; }
+
+.oc-subscribe { border-color: var(--good-2); }
+
+.ocBadge {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--plum) 0%, var(--plum-2) 100%);
+  color: #fff;
+  font-size: var(--t-small);
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  box-shadow: 0 10px 22px -10px rgba(123, 62, 157, .6);
+}
+
+/* ------------------------------------------------------------ the shots -- */
+
+.oc-subscribe .ocBadge {
+  background: linear-gradient(90deg, var(--good) 0%, var(--good-2) 100%);
+  box-shadow: 0 10px 22px -10px rgba(30, 122, 79, .6);
+}
+
+/* MOBILE FIRST, AND THE PHONE IS THE ROW. A stacked card puts a 168px
+   photograph between her and the price on the screen where she has least
+   room. Side by side she sees the bottle and what it costs in one glance,
+   and three offers fit in the space two used to. Jane's page is laid out
+   the same way, from the same two wrappers. */
+.ocHead {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+}
+
+.ocMain {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  flex: 1;
+  min-width: 0;
+}
+
+.ocShots {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  height: 104px;
+  flex: 0 0 auto;
+  margin-bottom: 0;
+}
+
+.ocShots img {
+  height: 100%;
+  width: auto;
+  filter: drop-shadow(0 14px 16px rgba(36, 31, 46, .2));
+}
+
+.ocShots .ocShotGuide { height: 64%; }
+
+/* ------------------------------------------------------------ the price -- */
+
+.ocKicker {
+  margin: 0;
+  font-size: var(--t-small);
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--plum-2);
+}
+
+.oc-subscribe .ocKicker { color: var(--good); }
+
+/* Our detail line is longer than Jane's "30-day supply" — it carries the
+   per-bottle price and the terms — so it is set a size down. At body size
+   it out-weighed the number it was describing. The copy is untouched. */
+.ocSupply {
+  margin: 2px 0 0;
+  font-size: var(--t-small);
+  line-height: 1.34;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.ocPrice {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 6px 0 0;
+}
+
+.ocNow {
+  font-size: clamp(34px, 9.4vw, 52px);
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: var(--plum);
+}
+
+.oc-subscribe .ocNow { color: var(--good); }
+
+/* The struck price, on the diagonal, as on JJ's own coaching page. */
+.ocWas {
+  position: relative;
+  display: inline-block;
+  font-size: clamp(19px, 5.4vw, 24px);
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.ocWas::after {
+  content: "";
+  position: absolute;
+  left: -6%;
+  right: -6%;
+  top: 50%;
+  height: 2px;
+  border-radius: 3px;
+  background: var(--load);
+  transform: translateY(-50%) rotate(-11deg);
+}
+
+.ocDay {
+  margin: 5px 0 0;
+  font-size: var(--t-sub);
+  font-weight: 800;
+  color: var(--plum);
+}
+
+.oc-subscribe .ocDay { color: var(--good); }
+
+.ocTerms {
+  margin: 2px 0 0;
+  font-size: var(--t-small);
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.ocShip {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: var(--t-small);
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--good);
+}
+
+.ocFill { display: none; }
+
+/* ------------------------------------------------------------ the bonus -- */
+
+.ocBonus {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  margin: 14px 0 0;
+  padding: 9px 12px;
+  border: 1.5px dashed var(--lilac);
+  border-radius: 13px;
+  background: var(--surface-2);
+  text-align: left;
+}
+
+.ocBonus img {
+  height: 38px;
+  width: auto;
+  filter: drop-shadow(0 4px 6px rgba(36, 31, 46, .22));
+}
+
+.ocBonus span {
+  font-size: var(--t-small);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.ocBonus b { color: var(--plum); font-weight: 800; }
+
+/* ----------------------------------------------------------- the button -- */
+
+.ocCta {
+  width: 100%;
+  max-width: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ALL THREE ARE FILLED, which is Jane's call and her reasoning: flanked by
+   two solid buttons, anything hollow reads as disabled. The Plan keeps its
+   lead through the badge, the border and the gradient rather than through
+   being the only button that looks pressable.
+   The single takes the flatter purple; the subscription takes its own
+   colour, solid, the way the teal button does on her page. */
+.oc .ocCtaSoft {
+  background: var(--plum-2);
+  color: #fff;
+  border: none;
+  box-shadow: 0 18px 36px -20px rgba(123, 62, 157, .7);
+}
+
+.oc-subscribe .ocCtaSoft {
+  background: var(--good);
+  color: #fff;
+  box-shadow: 0 18px 36px -20px rgba(30, 122, 79, .7);
+}
+
+/* ------------------------------------------------- the per-card reassurance */
+
+.ocGuarantee {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 13px 0 0;
+  color: var(--good);
+  font-size: var(--t-small);
+  font-weight: 700;
+}
+
+.ocGuarantee span { color: var(--good); }
+
+/* --------------------------------------------------------------- the or -- */
+
+.ocOr {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 2px;
+}
+
+.ocOr::before,
+.ocOr::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.ocOr span {
+  font-size: var(--t-small);
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--plum-2);
+}
+
+/* ------------------------------------------------------- the guarantee -- */
+
+.ocGuard {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 4vw, 22px);
+  margin-top: clamp(24px, 6vw, 32px);
+  padding: clamp(18px, 5vw, 24px);
+  border: 1.5px solid var(--good-2);
+  border-radius: var(--radius-lg);
+  background: var(--good-wash);
+}
+
+.ocSeal {
+  flex: 0 0 auto;
+  width: clamp(76px, 21vw, 104px);
+  height: auto;
+}
+
+.ocGuardLead {
+  margin: 0;
+  font-size: var(--t-lead);
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.ocGuardBody {
+  margin: 7px 0 0;
+  font-size: var(--t-sub);
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.ocGuardBody a { color: var(--good); font-weight: 700; }
+
+/* ------------------------------------------------------------- desktop -- */
+
+@media (min-width: 900px) {
+  /* Three cards will not fit in the quiz's 640px reading column, so inside
+     the quiz the wrap steps out of it. ONLY inside the quiz: the offer pages
+     lay their hero out in columns that are already wide, and a breakout
+     there widens the column instead of escaping it, which pushes the page
+     sideways. 92vw rather than 100vw leaves the scrollbar its width. */
+  .rise .ocWrap {
+    width: min(var(--col-wide), 92vw);
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .ocGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(16px, 1.8vw, 22px);
+    align-items: stretch;
+  }
+
+  .ocSlot { display: flex; }
+  .ocSlot > .ocCol { flex: 1; }
+
+  /* Three across, and each card goes back to a column: there is width for
+     the photograph above the price once the cards are side by side. */
+  .ocHead { flex-direction: column; align-items: center; gap: 0; }
+  .ocMain { align-items: center; text-align: center; width: 100%; flex: none; }
+  .ocShots { height: clamp(138px, 13vw, 168px); gap: 10px; margin-bottom: 16px; }
+  .ocShots .ocShotGuide { height: 72%; }
+  .oc { padding: clamp(24px, 2.6vw, 30px) clamp(20px, 2.2vw, 24px); border-radius: 22px; }
+  .oc-protocol { padding-top: clamp(30px, 3vw, 36px); }
+  .ocPrice { justify-content: center; gap: 12px; margin-top: 14px; }
+  .ocSupply { margin-top: 6px; }
+  .ocDay { margin-top: 9px; }
+  .ocTerms { margin-top: 5px; }
+  .ocShip { justify-content: center; margin-top: 10px; }
+  .ocBonus { justify-content: center; margin: 0 0 14px; }
+  .ocFill { display: block; flex: 1; min-height: 18px; }
+
+  /* Side by side, the gap says "or" without a word in it. */
+  .ocOr { display: none; }
+}
+
+/* The lines under the cards: day rate, deadline, batch. Centred under three
+   centred cards, and set at body size rather than caption size because they
+   are read, not skimmed. */
+.ocLine {
+  margin: clamp(16px, 4vw, 20px) 0 0;
+  text-align: center;
+  font-size: var(--t-sub);
+  line-height: 1.45;
+}
