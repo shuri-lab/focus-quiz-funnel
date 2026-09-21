@@ -8,6 +8,8 @@
  * IDs are confirmed. This module only fires events at them.
  */
 
+import { cartPath, type OfferKind } from './offer';
+
 declare global {
   interface Window {
     fbq?: (...args: unknown[]) => void;
@@ -61,7 +63,7 @@ export function pageView(path: string, title: string): void {
 
 /**
  * The Clarity project. Committed rather than left to an env var, for the same
- * reason the GTM container ID is committed in __root.tsx: a Clarity project
+ * reason the GTM container ID is committed in index.html: a Clarity project
  * ID is not a secret — it is readable in the page source of every site that
  * runs Clarity — and committing it is what makes the tag work in CI, in any
  * deploy, and on a teammate's clone without a .env being set up first.
@@ -79,7 +81,7 @@ const CLARITY_ID =
  * if the script is blocked or absent, every call is a no-op and the funnel
  * carries on.
  *
- * Do NOT also paste Microsoft's raw snippet into a document head. This IS that
+ * Do NOT also paste Microsoft's raw snippet into index.html. This IS that
  * snippet; two copies would load the tag twice and record duplicate sessions.
  */
 export function initClarity(): void {
@@ -97,7 +99,7 @@ export function initClarity(): void {
       t.async = true;
       t.src = 'https://www.clarity.ms/tag/' + i;
       const y = l.getElementsByTagName(r)[0];
-      y?.parentNode?.insertBefore(t, y);
+      if (y) y.parentNode?.insertBefore(t, y);
     })(window, document, 'clarity', 'script', CLARITY_ID);
   } catch { /* tracking must never break the funnel */ }
 }
@@ -143,6 +145,18 @@ export const track = {
   offerView(outcome: string) {
     push('view_offer', { outcome });
     meta('ViewContent', { content_name: 'offer', content_category: outcome }, true);
+  },
+
+  /** The Starter Guide page, by archetype. Her own plan, before any email. */
+  planView(archetype: string) {
+    push('view_plan', { archetype });
+    meta('ViewContent', { content_name: 'plan', content_category: archetype }, true);
+  },
+
+  /** She changed which bottle count she is buying. Fired on change, not on load. */
+  selectOption(offer: string, value: number) {
+    push('select_option', { offer, value, currency: 'USD' });
+    meta('SelectOption', { offer, value });
   },
 
   /** The click out to the shop. The doctor route never reaches this. */
@@ -198,34 +212,100 @@ export function readAttribution(): Record<string, string> {
  * quiz's own value is only a fallback for traffic that arrived with none.
  * The outcome is never lost either way, because hf_outcome always carries it.
  *
- * `storefront=true` is set explicitly rather than inherited from the base, so
- * this cannot silently become the direct-to-checkout link.
+ * `base` supplies the STORE ORIGIN only. The path and the cart query come from
+ * `cartPath()` in offer.ts, which is where the three modes live: one bottle,
+ * two bottles by discount code, two bottles by variant. Passing the origin in
+ * rather than repeating it keeps the store host named once, in logic.ts.
+ *
+ * `storefront=true` is set explicitly rather than inherited, so this cannot
+ * silently become the direct-to-checkout link.
  */
-export function shopUrl(base: string, outcome: string, angle: string): string {
-  const url = new URL(base);
+/**
+ * What the quiz tells Shopify about itself.
+ *
+ * These five are the quiz's own, and they overwrite whatever the ad set,
+ * because a Shopify report reads utm_* and nothing else. The ad's originals
+ * are not lost — they move to the hf_* pair of each one below.
+ */
+export const QUIZ_UTM = {
+  source: 'bridge',
+  medium: 'quiz',
+  campaign: 'hf-60day',
+} as const;
+
+/** One utm_content per offer, so the store can read bundle mix directly. */
+export const OFFER_UTM_CONTENT: Record<OfferKind, string> = {
+  single: '1bottle',
+  protocol: '2bottle',
+  subscribe: 'sub',
+};
+
+/**
+ * Where an incoming utm_* goes once the quiz has taken its name.
+ *
+ * Prefixed rather than dropped: Shopify keeps the whole query on the order's
+ * landing-site URL, so both questions stay answerable from one row — where
+ * she came from originally, and that she bought through the quiz.
+ */
+const ORIGINAL_OF: Record<string, string> = {
+  utm_source: 'hf_src',
+  utm_medium: 'hf_medium',
+  utm_campaign: 'hf_campaign',
+  utm_content: 'hf_content',
+  utm_term: 'hf_term',
+};
+
+/**
+ * The cart link: the quiz's attribution, without losing the ad's.
+ *
+ * THE COLLISION, AND HOW IT IS RESOLVED. Shopify attributes on utm_source,
+ * utm_medium and utm_campaign. The quiz has to own those or no order can be
+ * traced to it. The ad also needs them or no order can be traced to Meta.
+ * They cannot both have the same five keys, so the quiz takes them and the
+ * ad's values move one prefix across, unchanged and complete.
+ *
+ * Click ids are NOT prefixed. fbclid, gclid and ttclid are read by exact
+ * name by the platforms that issued them; renaming one breaks it.
+ */
+export function shopUrl(
+  base: string,
+  outcome: string,
+  angle: string,
+  offer: OfferKind = 'single',
+): string {
+  const url = new URL(cartPath(offer), base);
   const ad = readAttribution();
 
   /* The cart, not the checkout. Asserted here, not assumed from the base. */
   url.searchParams.set('storefront', 'true');
-
   url.searchParams.set('src', 'quiz');
-  url.searchParams.set('utm_source', ad['utm_source'] ?? 'quiz');
-  url.searchParams.set('utm_medium', ad['utm_medium'] ?? 'owned');
-  url.searchParams.set('utm_campaign', ad['utm_campaign'] ?? 'hormone_check');
-  url.searchParams.set('utm_content', ad['utm_content'] ?? `offer_screen__${outcome}`);
 
-  const term = ad['utm_term'] ?? angle;
-  if (term) url.searchParams.set('utm_term', term);
+  /* 1. The quiz's own attribution. */
+  url.searchParams.set('utm_source', QUIZ_UTM.source);
+  url.searchParams.set('utm_medium', QUIZ_UTM.medium);
+  url.searchParams.set('utm_campaign', QUIZ_UTM.campaign);
+  url.searchParams.set('utm_content', OFFER_UTM_CONTENT[offer]);
+  /* The angle she came through. Nothing was specified for utm_term, and the
+     landing page she answered is the useful thing to put there. */
+  if (angle) url.searchParams.set('utm_term', angle);
 
-  /* Pass-through, only when the ad actually set them. */
-  for (const key of ['hf_funnel', 'hf_variant'] as const) {
+  /* 2. The ad's attribution, preserved beside it rather than under it. */
+  for (const [incoming, kept] of Object.entries(ORIGINAL_OF)) {
+    if (ad[incoming]) url.searchParams.set(kept, ad[incoming]);
+  }
+
+  /* 3. Click ids, by their real names, because that is how they are read.
+        gclid and ttclid were being captured and then dropped here. */
+  for (const key of ['fbclid', 'gclid', 'ttclid'] as const) {
     if (ad[key]) url.searchParams.set(key, ad[key]);
   }
 
-  /* The quiz result, kept in its own param so carrying the ad's utm_content
-     through does not cost us the outcome attribution. */
+  /* 4. What the quiz knows that no UTM carries. */
+  for (const key of ['hf_funnel', 'hf_variant'] as const) {
+    if (ad[key]) url.searchParams.set(key, ad[key]);
+  }
   url.searchParams.set('hf_outcome', outcome);
+  url.searchParams.set('hf_offer', offer);
 
-  if (ad['fbclid']) url.searchParams.set('fbclid', ad['fbclid']);
   return url.toString();
 }
