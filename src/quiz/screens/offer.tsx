@@ -1,218 +1,236 @@
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuiz } from '../context';
-import { Screen, ScreenTitle, ActionBar } from '../../components/Screen';
-import { score, stateKey } from '../../lib/logic';
+import { Screen, ScreenTitle } from '../../components/Screen';
+import { OkendoWall } from '../../components/OkendoWall';
+import { mainConcern, stateKey } from '../../lib/logic';
 import {
-  BOTTLE, CUSTOMERS, FDA_DISCLAIMER, OFFER_DISCLAIMER, SEV_PHRASE, TRIED_WHY, VERDICT,
+  NEXT_BRIDGE, NEXT_EYEBROW, NEXT_HOW, NEXT_HOW_PIECES, NEXT_INTRO, NEXT_LEAD, NEXT_STEPS,
+  OFFER_DISCLAIMER, nextTitle, triedLine,
 } from '../../lib/content';
-import { Stars } from '../../components/icons';
-import { RATING, REVIEW_COUNT } from '../../lib/reviews';
+import { FacebookComment, Faces, Quote, RatingBadge } from '../../components/Proof';
+import { kitProof } from '../../lib/reviews';
+import { PROTOCOL_PRICE, money } from '../../lib/offer';
+import { INGREDIENTS } from '../../lib/offerCopy';
 import {
-  GUARANTEE_DAYS,
-} from '../../lib/offer';
-import { OfferCards } from '../../components/OfferCards';
-import {
-  GUARANTEE_HEADLINE, GUARANTEE_LINK_TEXT, GUARANTEE_SUB_PRE, GUARANTEE_SUB_REST,
-  REFUND_POLICY_URL,
-} from '../../lib/offerCopy';
-import type { Severity } from '../../lib/logic';
+  CLOSE_CTA, CLOSE_HEAD, HF_BODY, HF_EYEBROW, HF_HEAD, KIT_CTA, KIT_FAQ, KIT_FAQ_EYEBROW,
+  KIT_FAQ_HEAD, PROOF_EYEBROW, PROOF_HEAD, PROOF_MORE_HEAD, PROOF_NOTE, WHY_BODY,
+  WHY_EYEBROW, WHY_HEAD,
+} from '../../lib/kitCopy';
+import { KitGuarantee, KitOffer, kitHref } from '../../components/KitOffer';
+import { track } from '../../lib/analytics';
 
-function Guarantee() {
-  return (
-    <>
-      <div className="sealWrap">
-        <span className="seal"><b>SEE<br />RESULTS</b><i>or it is free</i></span>
-        {/* The same words as the buy block, from the same constants. Two
-            guarantees worded two ways is one guarantee nobody believes. */}
-        <div className="sealTxt">
-          <b>{GUARANTEE_HEADLINE}</b>
-          <span>
-            {GUARANTEE_SUB_PRE}
-            <a href={REFUND_POLICY_URL} target="_blank" rel="noopener noreferrer">
-              {GUARANTEE_LINK_TEXT}
-            </a>
-            {GUARANTEE_SUB_REST}
-          </span>
-        </div>
-      </div>
-      <p className="microDisc">Results may vary based on individual. No results guaranteed.</p>
-    </>
-  );
-}
+/* ---------------------------------------------------------------- r2 ---- */
 
-/* ---------------------------------------------------------------- r4 ---- */
+/* HER 60 DAYS, AND THE KIT. One page she scrolls, not a run of screens she
+   taps through.
+ *
+ * The order: her 60-day plan, named for the concern she picked; the five
+ * things to do; the question she is asking (how?); the kit as the answer,
+ * piece by piece; women who have done it, before the price; the offer; more
+ * proof, why sixty days, the formula, the guarantee, questions, one last
+ * review and the button again. */
+/** Respect the setting rather than animate over it. */
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined'
+  && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-export function R4() {
-  const { S, next } = useQuiz();
-  const why = S.tried.map((k) => TRIED_WHY[k]).filter(Boolean);
-
-  return (
-    <Screen id="r4">
-      <p className="eyebrow">What you have already tried</p>
-      <ScreenTitle className="rTitle">Why nothing has worked.</ScreenTitle>
-
-      <div className="block">
-        {why.length
-          ? why.map(([head, tail], i) => <p key={i}><strong>{head}</strong> {tail}</p>)
-          : (
-            <p>
-              <strong>You have not tried anything for this yet.</strong> Most women have not.
-              Nobody tells you there is anything to try.
-            </p>
-          )}
-      </div>
-
-      <div className="block key"><p className="lead">None of it was aimed at the cause.</p></div>
-
-      <ActionBar>
-        <button type="button" className="cta" onClick={() => next()}>So what does? &rarr;</button>
-      </ActionBar>
-    </Screen>
-  );
-}
-
-/* --------------------------------------------------------------- r4b ---- */
-
-export function R4b() {
-  const { next } = useQuiz();
-  return (
-    <Screen id="r4b">
-      <p className="eyebrow">What does</p>
-      <ScreenTitle className="rTitle">Two capsules a day.</ScreenTitle>
-
-      <div className="shot">
-        <img src={BOTTLE} alt="Hormone Focus" width={620} height={540} loading="lazy" decoding="async" />
-      </div>
-
-      <div className="badges">
-        <span className="badge">{GUARANTEE_DAYS}-day guarantee</span>
-        <span className="badge">No diet changes</span>
-        <span className="badge">Two capsules a day</span>
-      </div>
-
-      <div className="block key">
-        <p className="lead">Most hormone supplements only do half the job.</p>
-        <p>They break it down. They do not carry it out. So it goes back in.</p>
-        <p><strong>Hormone Focus is a 3-in-1 blend that does all three.</strong></p>
-        <div className="formula">
-          <div className="ing"><b>Breaks it down &mdash; <em>DIM</em></b><i>From broccoli and cabbage.</i></div>
-          <div className="ing"><b>Carries it out &mdash; <em>Calcium D-Glucarate</em></b><i>So it does not come back.</i></div>
-          <div className="ing"><b>Helps you absorb both &mdash; <em>BioPerine</em></b><i>From black pepper.</i></div>
-        </div>
-      </div>
-
-      <Guarantee />
-
-      <ActionBar>
-        <button type="button" className="cta" onClick={() => next()}>How fast does it work? &rarr;</button>
-      </ActionBar>
-    </Screen>
-  );
-}
-
-/* ---------------------------------------------------------------- r5 ---- */
-
-export function R5() {
-  const { next } = useQuiz();
-  return (
-    <Screen id="r5">
-      <p className="eyebrow">You asked</p>
-      <ScreenTitle className="rTitle">This is how fast it works.</ScreenTitle>
-
-      <div className="protocol">Take two capsules a day</div>
-
-      <div className="steps">
-        <div className="step">
-          <b className="n">1</b>
-          <div className="t"><b>The first month</b><span>Your body needs a full cycle before it can show you anything. The first thing most women notice is <em>less bloating and water retention.</em>*</span></div>
-        </div>
-        <div className="step">
-          <b className="n">2</b>
-          <div className="t"><b>From today</b><span>Your plan is already written: what to change this week, and what customers report at two weeks, four, and sixty.</span></div>
-        </div>
-        <div className="step">
-          <b className="n">3</b>
-          <div className="t"><b>Day thirty</b><span>The point most women say they can tell.</span></div>
-        </div>
-        <div className="step">
-          <b className="n">4</b>
-          <div className="t"><b>Day sixty</b><span>The guarantee is still running. It outlasts the bottle by a month, on purpose.</span></div>
-        </div>
-      </div>
-
-      <p className="fine">*{FDA_DISCLAIMER}</p>
-
-      <ActionBar>
-        <button type="button" className="cta" onClick={() => next()}>Who else is doing this? &rarr;</button>
-      </ActionBar>
-    </Screen>
-  );
-}
-
-/* ---------------------------------------------------------------- r6 ---- */
-
-export function R6() {
-  const { next } = useQuiz();
-  return (
-    <Screen id="r6">
-      <p className="eyebrow">Who else is doing this</p>
-      <ScreenTitle className="rTitle">You would be in good company.</ScreenTitle>
-
-      {/* 800,000 is scoped to books and challenges. It is never a Hormone Focus
-          customer count, and it never appears on a button. */}
-      <div className="block key">
-        <p className="lead">JJ&rsquo;s books and challenges have helped over 800,000 women.</p>
-        <p>Hormone Focus is the one she made for what happens to your hormones.</p>
-      </div>
-
-      <div className="selfieGrid">
-        {CUSTOMERS.map((src) => (
-          <img key={src} src={src} alt="" width={170} height={265} loading="lazy" decoding="async" />
-        ))}
-      </div>
-      <p className="selfieCap">Real customers, from JJ&rsquo;s own product page.</p>
-
-      <div className="ratingBlock" style={{ marginTop: 14 }}>
-        <div className="ratingBig">{RATING}</div>
-        <div className="ratingStars"><Stars /></div>
-        <p className="ratingSub">from {REVIEW_COUNT} verified reviews of Hormone Focus</p>
-      </div>
-
-      <ActionBar>
-        <button type="button" className="cta" onClick={() => next()}>See what it costs &rarr;</button>
-      </ActionBar>
-    </Screen>
-  );
-}
-
-/* ---------------------------------------------------------------- r7 ---- */
-
-export function R7() {
-  const { S, angle, restart } = useQuiz();
+export function R2() {
+  const { S, angle } = useQuiz();
   const outcome = stateKey(S);
-  const v = VERDICT[outcome];
-  const sc = score(S);
+  const main = mainConcern(S);
+  const proof = kitProof(main);
+  const tried = triedLine(S);
+  const href = kitHref(outcome, angle.slug);
+
+  /* The bar shows wherever the page has no call to action of its own in
+     view, and stays off the legal text at the foot.
+   *
+   * It used to watch only the offer block, with an IntersectionObserver that
+   * fired on `boundingClientRect.bottom < 0`. That is true only once the
+   * block is entirely above the viewport, which on this page meant the bar
+   * appeared at the very bottom and nowhere else — and there it sat on top
+   * of the disclaimer. Both regions are measured now, the way Jane's
+   * landing page does it. */
+  const offer = useRef<HTMLDivElement>(null);
+  const foot = useRef<HTMLParagraphElement>(null);
+  const [sticky, setSticky] = useState(false);
+
+  useEffect(() => {
+    const onScreen = (el: Element | null, bottomBias: number) => {
+      if (!el) return false;
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      return r.bottom > 0 && r.top < vh * bottomBias;
+    };
+
+    const update = () => setSticky(
+      !onScreen(offer.current, 0.85) && !onScreen(foot.current, 1),
+    );
+
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, []);
 
   return (
-    <Screen id="r7">
-      <p className="eyebrow">Based on your answers</p>
-      <ScreenTitle className="rTitle">
-        Here is where I would start you, {S.name.trim() || 'you'}.
-      </ScreenTitle>
-      <p className="rDeck">
-        {v.name} &middot; {sc.raw} of 14 signs
-        {S.sev && ` · ${SEV_PHRASE[S.sev as Severity]}`}
-      </p>
+    <Screen id="r2">
+      <p className="eyebrow">{NEXT_EYEBROW}</p>
+      <ScreenTitle className="rTitle">{nextTitle(main)}</ScreenTitle>
 
-      {/* No bottle photograph above the cards: each card carries its own
-          product shot, and a fourth picture of the same bottle was the
-          largest thing on the screen while saying the least. The Starter
-          Guide rides inside the two-bottle card as the bonus it is, rather
-          than as a block of its own. */}
-      <OfferCards outcome={outcome} angle={angle.slug} stack={false} />
+      {/* What to do, then the question she is already asking, then the kit as
+          the answer to it, piece by piece. */}
+      <div className="block">
+        {tried && <p>{tried}</p>}
+        <p className="lead">{NEXT_LEAD}</p>
+        <p>{NEXT_INTRO}</p>
+        <ul className="nextList">
+          {NEXT_STEPS.map((s) => <li key={s}>{s}</li>)}
+        </ul>
+      </div>
 
-      <button type="button" className="cta ghost" onClick={restart}>Start the check again</button>
+      <div className="nextHow">
+        <p className="nextHowQ">{NEXT_HOW}</p>
+        <p className="lead">{NEXT_BRIDGE}</p>
+        <div className="nextPieces">
+          {NEXT_HOW_PIECES.map(([what, does]) => (
+            <div key={what}><b>{what}</b><span>{does}</span></div>
+          ))}
+        </div>
+        <p className="nextSign">JJ Smith</p>
+      </div>
 
-      <p className="fine">{OFFER_DISCLAIMER}</p>
+      {/* Women who have done it, before she reaches the price. */}
+      <section className="kitSec preProof" data-proof="pre">
+        <p className="kitEyebrow">{PROOF_EYEBROW}</p>
+        <h2 className="kitH2">{PROOF_HEAD}</h2>
+        <Faces count={6} />
+        <RatingBadge />
+        {proof.lead[0] && <Quote review={proof.lead[0]} />}
+      </section>
+
+      {/* ------------------------------------------------ the offer ---- */}
+      <section className="kitBand" ref={offer}>
+        <KitOffer outcome={outcome} angle={angle.slug} />
+      </section>
+
+      {/* ------------------------------------------- proof, block 1 ---- */}
+      <section className="kitSec">
+        <Faces count={12} />
+        <div className="kitRevs" data-proof="lead">
+          {proof.lead.slice(1).map((r) => <Quote key={r.name} review={r} />)}
+        </div>
+        <p className="kitNote">{PROOF_NOTE}</p>
+      </section>
+
+      {/* ------------------------------------------------ why 60 days ---- */}
+      <section className="kitSec">
+        <p className="kitEyebrow">{WHY_EYEBROW}</p>
+        <h2 className="kitH2">{WHY_HEAD}</h2>
+        {WHY_BODY.map((p) => <p className="kitBody" key={p}>{p}</p>)}
+      </section>
+
+      {/* ---------------------------------- Hormone Focus, the formula ---- */}
+      <section className="kitSec">
+        <p className="kitEyebrow">{HF_EYEBROW}</p>
+        <h2 className="kitH2">{HF_HEAD}</h2>
+        <p className="kitBody">{HF_BODY}</p>
+        <div className="kitMg">
+          {INGREDIENTS.map(([dose, name, what]) => (
+            <div key={name}>
+              <b>{dose}</b>
+              <span><strong>{name}.</strong> {what}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ------------------------------------------- proof, block 2 ----
+          LIVE FROM OKENDO, the same store and product JJ's page reads, so the
+          two cannot disagree about what customers said. The authored reviews
+          below are the fallback: if Okendo is slow, blocked or down she reads
+          customers rather than a spinner. */}
+      <section className="kitSec">
+        <h2 className="kitH2">{PROOF_MORE_HEAD}</h2>
+        <OkendoWall
+          fallback={(
+            <>
+              <RatingBadge />
+              <div className="kitRevs" data-proof="more">
+                {proof.more.map((r) => <Quote key={r.name} review={r} />)}
+              </div>
+            </>
+          )}
+        />
+        <FacebookComment />
+        <p className="kitNote">{PROOF_NOTE}</p>
+      </section>
+
+      {/* --------------------------------------------- the guarantee ---- */}
+      <section className="kitBand teal">
+        <KitGuarantee />
+      </section>
+
+      {/* ------------------------------------------------- questions ---- */}
+      <section className="kitSec">
+        <p className="kitEyebrow">{KIT_FAQ_EYEBROW}</p>
+        <h2 className="kitH2">{KIT_FAQ_HEAD}</h2>
+        <div className="kitFaq">
+          {KIT_FAQ.map(([q, a]) => (
+            <details key={q}>
+              <summary>{q}</summary>
+              <p>{a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* ------------------------------- one last review, and the button ---- */}
+      <section className="kitSec kitClose">
+        <div data-proof="closing"><Quote review={proof.closing} long /></div>
+        <h2 className="kitH2">{CLOSE_HEAD}</h2>
+        <a
+          className="cta kitBtn" href={href} data-offer="protocol" data-close
+          onClick={() => track.checkout(outcome, PROTOCOL_PRICE)}
+        >
+          {CLOSE_CTA} &nbsp;&rarr;
+        </a>
+        <p className="kitNote">{money(PROTOCOL_PRICE)} · free shipping · 60-day money-back guarantee</p>
+      </section>
+
+      <p className="fine" ref={foot}>*{OFFER_DISCLAIMER}</p>
+
+      {/* PORTALLED TO <body> ON PURPOSE, and this is not a style choice.
+          The screen wrapper .rise keeps a transform after its entrance
+          animation — matrix(1,0,0,1,0,0), an identity, but not `none`. A
+          transformed ancestor becomes the containing block for its fixed
+          descendants, so position:fixed anchored to .rise instead of the
+          viewport and this bar rendered 8,694px down the page, present and
+          visible in the DOM and never once on screen. Out here it cannot
+          happen again whatever an ancestor does. */}
+      {sticky && createPortal((
+        <div className="kitSticky">
+          <span><b>{money(PROTOCOL_PRICE)}</b> free shipping</span>
+          {/* THIS TAKES HER TO THE OFFER, IT DOES NOT BUY. She is somewhere
+              down a long page with no price in view; the honest move is to
+              put the choice back in front of her and let her pick, not to
+              decide for her from a bar she half-read. The buy events still
+              come from the cards themselves, so nothing double-counts. */}
+          <button
+            type="button" className="cta kitBtn" data-sticky
+            onClick={() => offer.current?.scrollIntoView({
+              behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+              block: 'start',
+            })}
+          >
+            {KIT_CTA}
+          </button>
+        </div>
+      ), document.body)}
     </Screen>
   );
 }

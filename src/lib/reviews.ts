@@ -114,4 +114,100 @@ export const SCALE_QUOTE: Review = {
 
 /** The rating and the count travel together and appear nowhere else. */
 export const RATING = '4.9';
-export const REVIEW_COUNT = 170;
+export const REVIEW_COUNT = 171;
+
+/* ------------------------------------------------ PROOF ON THE KIT PAGE --
+ *
+ * The quiz shows no review until she has her result. After it, the kit page
+ * carries three blocks: a few reviews straight under the offer, led by one
+ * that speaks to the concern she named; a row of shorter ones further down;
+ * and one longer one before the last button.
+ *
+ * The same rules as the wall. Every body below is verbatim. These four are
+ * on JJ's own offer page (read 2 October 2026) or were already quoted in the
+ * quiz, and they are added here rather than rewritten into the wall.
+ */
+const EXTRA: Review[] = [
+  {
+    name: 'Lisa',
+    verified: true,
+    body: 'I finally shed this hormonal weight gain! My energy and moods are so much better. Starting to feel like myself again.',
+  },
+  {
+    name: 'Roslind',
+    verified: true,
+    body: 'This has made a tremendous change in my perimenopause symptoms... I sleep better, no night sweat, mood is great and less flashes! Fast results.',
+  },
+  {
+    name: 'Anita F.',
+    verified: true,
+    body: 'It’s so AMAZING has given me my life back!',
+  },
+  {
+    name: 'Adrienne',
+    verified: true,
+    body: 'I have been using the Hormone Focus bundle for almost 2 months. The best way to describe how I feel, I believe only women who are going through it will understand, I feel normal again! I write this a bit teary eyed. The last few years have been tough. My menopause symptoms included anxiety. I felt like fear had me in a choke hold. After I received the bundle, I kid you not, the first night I was able to sleep and wake up the next morning feeling rested. My hot flashes and night sweats became less. My mood has improved and the anxious thoughts and feeling gone. This has been a game changer for my relationship with my husband as well.',
+  },
+];
+
+const BY_NAME = new Map([...WALL, ...EXTRA].map((r) => [r.name, r]));
+
+function named(names: string[]): Review[] {
+  return names.map((n) => BY_NAME.get(n)).filter((r): r is Review => Boolean(r));
+}
+
+/** Which three open the proof, by the concern she said bothers her most. */
+export const LEAD_FOR: Record<string, string[]> = {
+  weight: ['Lisa', 'Catonne J.', 'Toya H.'],
+  bloat: ['Toya H.', 'Roslind', 'Lisa'],
+  sleep: ['Roslind', 'Catonne J.', 'Lisa'],
+  sweats: ['Toya H.', 'Roslind', 'Stephanie L.'],
+  mood: ['Roslind', 'Lisa', 'Shauna H.'],
+  energy: ['Lisa', 'Shauna H.', 'Roslind'],
+};
+
+/* ------------------------------------------- THE FACES AND THE BADGE --
+ *
+ * Borrowed from JJ's live offer page (read 2 October 2026), where they
+ * already run: twelve customers holding the bottle, the Okendo mark the
+ * review count is verified by, and one Facebook comment as JJ's page shows
+ * it. The comment is a picture of the comment, so its words are in the alt
+ * text exactly as the page has them.
+ */
+export const PROOF_FACES: string[] =
+  Array.from({ length: 12 }, (_, i) => `/img/proof/selfie-${i + 1}.webp`);
+
+export const OKENDO_MARK = '/img/proof/okendo.webp';
+
+export const FB_COMMENT = {
+  src: '/img/proof/fb-comment.webp',
+  alt: 'Facebook comment from Martinez Sullivan: this is a game changer, I have literally shed some inches and lbs, not to mention the hot flashes are gone when I take it',
+};
+
+export interface KitProof {
+  /** Straight under the offer. The first speaks to her main concern. */
+  lead: Review[];
+  /** Further down, after the kit is explained. */
+  more: Review[];
+  /** One longer review before the last button. */
+  closing: Review;
+}
+
+export function kitProof(_mainConcern: string): KitProof {
+  return {
+    /* THE FOUR FROM JJ'S OWN PAGE, at David's request: the same women, in the
+       same order, that "Join the women who stopped fighting it" shows there.
+       They were already in this file — the quiz and the landing page read the
+       same published reviews — so this is a change of selection, not of source.
+
+       NOTE what it costs: lead used to answer her main concern, so a woman who
+       said "sleep" met a woman who slept. These four are the same for everyone.
+       LEAD_FOR is kept just below, so putting that back is one line. */
+    lead: named(['Anita F.', 'Katina S.', 'Adrienne', 'Roslind']),
+    /* "What women are saying" is live Okendo now, so this list no longer
+       feeds it; it stays as the fallback the section shows if Okendo cannot
+       be reached. */
+    more: named(['Anita F.', 'QUANEZIA M.', 'Mara', 'Kim']),
+    closing: BY_NAME.get('Adrienne') as Review,
+  };
+}
