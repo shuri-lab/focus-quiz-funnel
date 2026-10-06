@@ -13,8 +13,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as LiveRouteImport } from './routes/live'
 import { Route as OfferRouteImport } from './routes/offer'
-import { Route as QuizRouteImport } from './routes/quiz'
-import { Route as SlugQuizRouteImport } from './routes/$slug.quiz'
 import { Route as OfferSlugRouteImport } from './routes/offer.$slug'
 import { Route as PlanArchetypeRouteImport } from './routes/plan.$archetype'
 
@@ -38,16 +36,6 @@ const OfferRoute = OfferRouteImport.update({
   path: '/offer',
   getParentRoute: () => rootRouteImport,
 } as any)
-const QuizRoute = QuizRouteImport.update({
-  id: '/quiz',
-  path: '/quiz',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SlugQuizRoute = SlugQuizRouteImport.update({
-  id: '/quiz',
-  path: '/quiz',
-  getParentRoute: () => SlugRoute,
-} as any)
 const OfferSlugRoute = OfferSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -61,74 +49,50 @@ const PlanArchetypeRoute = PlanArchetypeRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/$slug': typeof SlugRouteWithChildren
+  '/$slug': typeof SlugRoute
   '/live': typeof LiveRoute
   '/offer': typeof OfferRouteWithChildren
-  '/quiz': typeof QuizRoute
-  '/$slug/quiz': typeof SlugQuizRoute
   '/offer/$slug': typeof OfferSlugRoute
   '/plan/$archetype': typeof PlanArchetypeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/$slug': typeof SlugRouteWithChildren
+  '/$slug': typeof SlugRoute
   '/live': typeof LiveRoute
   '/offer': typeof OfferRouteWithChildren
-  '/quiz': typeof QuizRoute
-  '/$slug/quiz': typeof SlugQuizRoute
   '/offer/$slug': typeof OfferSlugRoute
   '/plan/$archetype': typeof PlanArchetypeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/$slug': typeof SlugRouteWithChildren
+  '/$slug': typeof SlugRoute
   '/live': typeof LiveRoute
   '/offer': typeof OfferRouteWithChildren
-  '/quiz': typeof QuizRoute
-  '/$slug/quiz': typeof SlugQuizRoute
   '/offer/$slug': typeof OfferSlugRoute
   '/plan/$archetype': typeof PlanArchetypeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
-    | '/$slug'
-    | '/live'
-    | '/offer'
-    | '/quiz'
-    | '/$slug/quiz'
-    | '/offer/$slug'
-    | '/plan/$archetype'
+    '/' | '/$slug' | '/live' | '/offer' | '/offer/$slug' | '/plan/$archetype'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/$slug'
-    | '/live'
-    | '/offer'
-    | '/quiz'
-    | '/$slug/quiz'
-    | '/offer/$slug'
-    | '/plan/$archetype'
+  to: '/' | '/$slug' | '/live' | '/offer' | '/offer/$slug' | '/plan/$archetype'
   id:
     | '__root__'
     | '/'
     | '/$slug'
     | '/live'
     | '/offer'
-    | '/quiz'
-    | '/$slug/quiz'
     | '/offer/$slug'
     | '/plan/$archetype'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  SlugRoute: typeof SlugRouteWithChildren
+  SlugRoute: typeof SlugRoute
   LiveRoute: typeof LiveRoute
   OfferRoute: typeof OfferRouteWithChildren
-  QuizRoute: typeof QuizRoute
   PlanArchetypeRoute: typeof PlanArchetypeRoute
 }
 
@@ -162,20 +126,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OfferRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/quiz': {
-      id: '/quiz'
-      path: '/quiz'
-      fullPath: '/quiz'
-      preLoaderRoute: typeof QuizRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/$slug/quiz': {
-      id: '/$slug/quiz'
-      path: '/quiz'
-      fullPath: '/$slug/quiz'
-      preLoaderRoute: typeof SlugQuizRouteImport
-      parentRoute: typeof SlugRoute
-    }
     '/offer/$slug': {
       id: '/offer/$slug'
       path: '/$slug'
@@ -193,16 +143,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface SlugRouteChildren {
-  SlugQuizRoute: typeof SlugQuizRoute
-}
-
-const SlugRouteChildren: SlugRouteChildren = {
-  SlugQuizRoute: SlugQuizRoute,
-}
-
-const SlugRouteWithChildren = SlugRoute._addFileChildren(SlugRouteChildren)
-
 interface OfferRouteChildren {
   OfferSlugRoute: typeof OfferSlugRoute
 }
@@ -215,10 +155,9 @@ const OfferRouteWithChildren = OfferRoute._addFileChildren(OfferRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  SlugRoute: SlugRouteWithChildren,
+  SlugRoute: SlugRoute,
   LiveRoute: LiveRoute,
   OfferRoute: OfferRouteWithChildren,
-  QuizRoute: QuizRoute,
   PlanArchetypeRoute: PlanArchetypeRoute,
 }
 export const routeTree = rootRouteImport
