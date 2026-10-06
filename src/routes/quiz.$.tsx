@@ -1,4 +1,5 @@
-import { createFileRoute, Navigate, useParams } from "@tanstack/react-router";
+import { createFileRoute, useParams } from "@tanstack/react-router";
+import { Navigate } from "@/lib/rr";
 import { Quiz } from "@/quiz/Quiz";
 import { FIRST_STEP, STEP_SLUG } from "@/quiz/steps";
 
@@ -19,6 +20,6 @@ export const Route = createFileRoute("/quiz/$")({
 
 function QuizRoute() {
   const { _splat } = useParams({ from: "/quiz/$" });
-  if (!_splat) return <Navigate href={`/quiz/${STEP_SLUG[FIRST_STEP]}`} replace />;
+  if (!_splat) return <Navigate to={`/quiz/${STEP_SLUG[FIRST_STEP]}`} replace />;
   return <Quiz />;
 }
