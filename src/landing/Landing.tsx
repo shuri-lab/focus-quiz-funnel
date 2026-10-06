@@ -1,63 +1,40 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link } from '@tanstack/react-router';
+import { useEffect } from 'react';
+import { Link, useParams } from '@/lib/rr';
 import { angleBySlug, angleTitle } from '../lib/angles';
 import { usePageMeta } from '../lib/usePageMeta';
 import { track } from '../lib/analytics';
 import {
-  REVIEWS, QUIZ_DISCLAIMER, FDA_DISCLAIMER, CUSTOMERS, CHIP_PROGRAMS, REVIEW_SOURCE,
-  HERO_IMG, HERO_ALT,
+  ALERT_BAR, COVER_CTA, COVER_CTA_NOTE, COVER_SUB, CUSTOMERS, FDA_DISCLAIMER,
+  HERO_IMG, IMG, JJ_LOGO, PROOF_EYEBROW, QUIZ_DISCLAIMER,
 } from '../lib/content';
-import { Stars } from '../components/icons';
 
-const CTA_LABEL = 'GET MY HORMONE PLAN';
-const PRIVACY_LINE = 'Private, and no answer is ever shared.';
+/* All six, in the order the quiz asks about them. The generic cover has no
+   one symptom to show, so it shows the lot, moving — the way JJ's own page
+   runs its customer photographs past on a phone. An angle cover does have
+   one, and shows that one, still and large. */
+const ALL_SYMPTOMS = [IMG.sweats, IMG.weight, IMG.sleep, IMG.bloat, IMG.mood, IMG.energy];
 
-function CheckMark() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="11" fill="var(--plum)" />
-      <path d="M7.5 12.4l3 3 6-6.5" stroke="#fff" strokeWidth="2.4"
-        strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
+/* Four faces, as the landing page's rating badge carries. */
+const FACES = CUSTOMERS.slice(0, 4);
 
-/** Stars plus the 4.9. The review count sits beside it on the proof section. */
-function Rate() {
-  return <div className="rate"><Stars n={5} /><b>4.9</b></div>;
-}
-
-/* The JJ programs chip shows on every route. The route chip shows only where
-   angles.ts gives it a value, which today is /weight and its 5M lbs figure.
-   The programs wording is scoped on purpose: 800,000 is books and challenges
-   and never a Hormone Focus customer count. Jane approved it on 15 Sept 2026. */
-function Chips({ chip1 }: { chip1: string }) {
-  return (
-    <div className="chips">
-      {chip1 && <span className="chip">{chip1}</span>}
-      <span className="chip">
-        <span className="faces">
-          {CUSTOMERS.slice(0, 3).map((src) => (
-            <i key={src} style={{ backgroundImage: `url(${src})` }} />
-          ))}
-        </span>
-        {CHIP_PROGRAMS}
-      </span>
-    </div>
-  );
-}
-
-/** Closes every section, as the reference page does. */
-function Cta({ to }: { to: string }) {
-  return <Link className="cta" to={to as string}>{CTA_LABEL} &nbsp;&rarr;</Link>;
-}
-
-export function Landing({ slug }: { slug?: string | undefined }) {
+/**
+ * THE COVER. One screen: the headline, one line, one button.
+ *
+ * It used to be five sections, with a rating, a customer photograph holding
+ * the bottle, three steps, a review and four buttons. Jane's call: it was
+ * messy and confusing. The promise is one sentence, so the page is too.
+ *
+ * The headline leads with what she already recognises. Hormones and
+ * perimenopause are the reveal at the end, not the premise at the start.
+ */
+export function Landing() {
+  const { slug } = useParams();
   const angle = angleBySlug(slug);
   const quizHref = angle.slug ? `/${angle.slug}/quiz` : '/quiz';
 
-  const heroCta = useRef<HTMLAnchorElement>(null);
-  const [showSticky, setShowSticky] = useState(false);
+  /* The symptom this version was bought for. The generic cover has none. */
+  const only = angle.preselect[0];
+  const hero = only ? IMG[only] : null;
 
   usePageMeta({
     title: angleTitle(angle),
@@ -67,171 +44,74 @@ export function Landing({ slug }: { slug?: string | undefined }) {
 
   useEffect(() => { track.landingView(angle.slug); }, [angle.slug]);
 
-  /* The sticky bar shows whenever the hero button is off screen. There is
-     always exactly one call to action visible, and never two at once. */
-  useEffect(() => {
-    const el = heroCta.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => setShowSticky(!entry!.isIntersecting),
-      { threshold: 0 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  const lead = REVIEWS[0]!;
-
-  /* Desktop layout. 'e' is the chosen one: the whole page on the hero's
-     left axis, with a background band per section. ?layout=a|b|c|d still
-     serves the rejected options for comparison; delete them and this
-     switch once 'e' is signed off. */
-  let layout = 'e';
-  try {
-    layout = new URLSearchParams(window.location.search).get('layout') ?? 'e';
-  } catch { /* no window */ }
-
   return (
-    <div className="app landing" data-layout={layout}>
-      <main className="appMain">
+    <div className="app landing cover">
+      {/* The bar JJ's page carries, saying the one thing this page asks. */}
+      <div className="alertBar">
+        <span className="alertStar" aria-hidden="true">&#10022;</span>
+        <span>{ALERT_BAR}</span>
+      </div>
 
-        {/* ------------------------------------------------ 1. HERO ----- */}
-        {/* The logo sits OUTSIDE .hero, as in the source file: on desktop the
-            hero becomes two columns and the lockup stays above both. */}
+      {/* A bar of its own, as JJ's page has: white, a hairline under it, and
+          the wordmark sitting in it rather than floating above the copy. */}
+      <header className="masthead">
+        <img className="jjLogo" src={JJ_LOGO} alt="JJ Smith" width={132} height={25} />
+      </header>
+
+      <main className="appMain">
         <section className="lpHero">
           <div className="screen">
-            <div className="lpLogo">
-              <b>HORMONE<i>FOCUS</i></b>
-              <span>by JJ Smith</span>
-            </div>
+            <div className="coverBody">
+              {/* Faces before the headline: she sees women before she reads a
+                  claim. Scoped to JJ's programmes, as the copy rules require —
+                  never to Hormone Focus customers. */}
+              {/* A pill, the way her rating badge is a pill: faces tucked
+                  into the left of it, the claim set against white so it
+                  reads as one object rather than a line of loose text. */}
+              <p className="proofPill">
+                <span className="proofFaces" aria-hidden="true">
+                  {FACES.map((src) => (
+                    <i key={src} style={{ backgroundImage: `url(${src})` }} />
+                  ))}
+                </span>
+                <span>{PROOF_EYEBROW}</span>
+              </p>
 
-            <div className="hero">
-              <div className="herocopy">
-                <Chips chip1={angle.chip1} />
+              <h1 className="lpH1">{angle.h1a} <em>{angle.h1b}</em></h1>
+              <p className="coverSub">{COVER_SUB}</p>
 
-                <h1 className="lpH1">{angle.h1a} <em>{angle.h1b}</em></h1>
-                <p className="lpSub">({angle.paren}).</p>
+              {/* .heroCta is the hook e2e/funnel.spec.ts uses to find the button. */}
+              <div className="heroCta">
+                <Link className="cta" to={quizHref}>{COVER_CTA} &nbsp;&rarr;</Link>
+                <p className="ctaNote">{COVER_CTA_NOTE}</p>
+              </div>
 
-                <div className="getline">
-                  <CheckMark />
-                  <p>Get your <u>free personal</u> hormone plan in <u>2 minutes</u></p>
+              {hero ? (
+                /* One symptom, one picture. This version was bought for it. */
+                <div className="coverShot">
+                  <img src={hero} alt="" width={540} height={405} decoding="async" />
                 </div>
-
-                {/* .heroCta is the hook e2e/funnel.spec.ts uses to find the
-                    first button and to assert exactly one CTA is on screen. */}
-                <div className="heroCta">
-                  <Link className="cta" to={quizHref as string} ref={heroCta}>{CTA_LABEL} &nbsp;&rarr;</Link>
+              ) : (
+                /* No single symptom to show, so all six go past. The list is
+                   doubled so the loop has somewhere to travel to. */
+                <div className="coverRail" aria-hidden="true">
+                  <div className="coverRailTrack">
+                    {[...ALL_SYMPTOMS, ...ALL_SYMPTOMS].map((src, i) => (
+                      <img key={`${src}-${i}`} src={src} alt="" width={540} height={405}
+                           loading={i < 3 ? 'eager' : 'lazy'} decoding="async" />
+                    ))}
+                  </div>
                 </div>
-                <Rate />
-                <p className="priv">{PRIVACY_LINE}</p>
+              )}
+
+              <div className="fine">
+                <p>{QUIZ_DISCLAIMER}</p>
+                <p>{FDA_DISCLAIMER}</p>
               </div>
-
-              <div className="heroimg">
-                <img src={HERO_IMG} alt={HERO_ALT} width={760} height={636}
-                  fetchPriority="high" decoding="async" />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ----------------------------------- 2. WHAT IS GOING ON ----- */}
-        <section className="lpSec first">
-          <div className="screen">
-            <p className="eyebrow">Step one</p>
-            <h2 className="sech">First, find out what is <em>really going on</em></h2>
-            <ul className="recogbox">
-              {angle.lines.map((l) => <li key={l}>{l}</li>)}
-            </ul>
-            <p className="secBody">{angle.closer}</p>
-            <Cta to={quizHref} />
-          </div>
-        </section>
-
-        {/* --------------------------------------- 3. HOW IT WORKS ----- */}
-        <section className="lpSec">
-          <div className="screen">
-            <p className="eyebrow">How it works</p>
-            <h2 className="sech">Three steps, <em>two minutes</em></h2>
-
-            {/* Wrapper so the three steps can sit side by side once there is
-                room. Named lpSteps: .steps already belongs to the offer screen. */}
-            <div className="lpSteps">
-            <div className="step">
-              <span className="stepn">1</span>
-              <div>
-                <b>Take the two-minute check.</b>
-                <span>A few honest questions about what you are feeling.</span>
-              </div>
-            </div>
-            <div className="step">
-              <span className="stepn">2</span>
-              <div>
-                <b>Get your hormone read.</b>
-                <span>Which stage you are in, read from your answers.</span>
-              </div>
-            </div>
-            <div className="step">
-              <span className="stepn">3</span>
-              <div>
-                <b>Find out what helps.</b>
-                <span>What fits your stage, and what to do next.</span>
-              </div>
-            </div>
-            </div>
-
-            <Cta to={quizHref} />
-          </div>
-        </section>
-
-        {/* --------------------------------------- 4. SOCIAL PROOF ----- */}
-        <section className="lpSec">
-          <div className="screen">
-            <p className="eyebrow">Real women</p>
-            <h2 className="sech">Women who could not <em>name it either</em></h2>
-
-            <div className="proofGrid">
-              {CUSTOMERS.map((src) => (
-                <img key={src} src={src} alt="Customer with Hormone Focus"
-                  width={300} height={400} loading="lazy" decoding="async" />
-              ))}
-            </div>
-
-            <Rate />
-            <p className="rev">&ldquo;{lead.b}&rdquo;</p>
-            <p className="revwho">{lead.n} &middot; verified buyer</p>
-            <p className="tiny">{REVIEW_SOURCE}</p>
-
-            <Cta to={quizHref} />
-          </div>
-        </section>
-
-        {/* --------------------------------------------- 5. CLOSER ----- */}
-        <section className="lpSec">
-          <div className="screen">
-            <h2 className="sech">Ready to find out what is <em>really going on?</em></h2>
-            <p className="secBody">
-              Take the two-minute check and get your personal hormone plan, free.
-              What you learn is yours to keep.
-            </p>
-            <Cta to={quizHref} />
-            <p className="priv">{PRIVACY_LINE}</p>
-
-            {/* Both sentences, on every route. The brief makes this non-negotiable. */}
-            <div className="fine">
-              <p>{QUIZ_DISCLAIMER}</p>
-              <p>{FDA_DISCLAIMER}</p>
             </div>
           </div>
         </section>
       </main>
-
-      {showSticky && (
-        <div className="stickyCta">
-          <div className="container" style={{ padding: 0 }}>
-            <Cta to={quizHref} />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

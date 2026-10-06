@@ -7,7 +7,7 @@ import {
 } from '../lib/offer';
 import {
   GUARANTEE_HEADLINE, GUARANTEE_LINK_TEXT, GUARANTEE_SUB_PRE,
-  GUARANTEE_SUB_REST, GUIDE_CARD_LEAD, GUIDE_CARD_REST, REFUND_POLICY_URL,
+  GUARANTEE_SUB_REST, REFUND_POLICY_URL,
   SHIPPING_LINE, STACK_HEADING, batchLine, liveDeadlineLine,
 } from '../lib/offerCopy';
 
@@ -51,7 +51,7 @@ export function useOfferChoice(initial: OfferKind = DEFAULT_OFFER) {
 /**
  * The promise first, the policy underneath it.
  *
- * She is deciding whether to risk $84.99 on something that has not worked
+ * She is deciding whether to risk $79.99 on something that has not worked
  * before, so the line that answers her goes in the size she will actually
  * read, and the policy that backs it sits under it with the policy itself one
  * tap away.
@@ -70,23 +70,6 @@ export function Guarantee() {
           {GUARANTEE_SUB_REST}
         </p>
       </div>
-    </div>
-  );
-}
-
-/**
- * The Starter Guide, named rather than handed over.
- *
- * It is one of the two bonuses in the stack, and a bonus she can open before
- * she buys is not a bonus. So the quiz says what it is and what is in it, and
- * she is given it after the order — on the confirmation page and in the first
- * post-purchase email. Nothing here links to /plan.
- */
-export function GuideCard() {
-  return (
-    <div className="guideCard">
-      <span className="guideBonus">Bonus</span>
-      <p><b>{GUIDE_CARD_LEAD}</b>{GUIDE_CARD_REST}</p>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQuiz } from './context';
 import { ArrowLeft } from '../components/icons';
+import { JJ_LOGO } from '../lib/content';
 
 export function QuizHeader() {
   const { here, back, canBack, questionStep, revealStep } = useQuiz();
@@ -14,7 +15,7 @@ export function QuizHeader() {
   }, []);
 
   return (
-    <header className="appHeader" data-scrolled={scrolled}>
+    <header className="appHeader" data-scrolled={scrolled} data-step={here}>
       <div className="headerInner">
         <button
           type="button"
@@ -26,7 +27,7 @@ export function QuizHeader() {
           <ArrowLeft />
         </button>
 
-        <span className="brand">Hormone Focus</span>
+        <img className="brand jjLogo" src={JJ_LOGO} alt="JJ Smith" width={132} height={25} />
 
         {revealStep ? (
           <div className="segbar" role="progressbar"
@@ -38,7 +39,7 @@ export function QuizHeader() {
           </div>
         ) : (
           <div className="progress" role="progressbar"
-            aria-valuenow={questionStep?.index ?? (here === 's1' ? 0 : 100)}
+            aria-valuenow={questionStep?.index ?? (here === 'q1' ? 0 : 100)}
             aria-valuemin={0}
             aria-valuemax={questionStep?.total ?? 100}
             aria-label="Quiz progress">

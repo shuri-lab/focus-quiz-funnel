@@ -6,6 +6,7 @@
 @import "./styles/global.css";
 @import "./styles/offer.css";
 @import "./styles/offer-cards.css";
+@import "./styles/kit.css";
 
 @custom-variant dark (&:is(.dark *));
 

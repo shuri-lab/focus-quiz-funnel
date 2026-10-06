@@ -1,125 +1,93 @@
-import { useEffect, useState } from 'react';
 import { useQuiz } from '../context';
 import { Screen, ScreenTitle, ActionBar } from '../../components/Screen';
 import {
-  GROUPS, TILES, BRAND, confidence, docReason, groupCount, groupMax, has, masked,
-  score, stateKey,
+  TILES, BRAND, docReason, has, mainConcern, masked, otherConcerns, stateKey,
 } from '../../lib/logic';
-import { DOC, IMG, QUIZ_DISCLAIMER, VERDICT } from '../../lib/content';
-import { GuideCard } from '../../components/BuyOptions';
+import {
+  CANNOT_TELL, DOC, DOC_TITLE, IMG, MASKED_NOTE, PATTERN_SHORT, QUIZ_DISCLAIMER, RESULT,
+  STAGE_FACT, WANT_PHRASE, cycleShort, mentioned,
+} from '../../lib/content';
+import type { Outcome, SymptomId } from '../../lib/logic';
 
-function displayName(name: string) {
-  return name.trim() || 'you';
-}
+const LABEL = Object.fromEntries(TILES) as Record<SymptomId, string>;
 
 /* ---------------------------------------------------------------- r1 ---- */
 
+/* HER RESULT. One named answer at the top, said in one sentence. Then what
+ * she told us, with the same pictures she tapped, what it means with her own
+ * symptoms in it, and one fact about women at her stage.
+ *
+ * It is a pattern and never "you have", and it never tells her she might be
+ * one thing or another: she gets one of four answers. */
 export function R1() {
   const { S, next } = useQuiz();
-  const v = VERDICT[stateKey(S)];
-  const outcome = stateKey(S);
+  const outcome = stateKey(S) as Exclude<Outcome, 'D'>;
+  const copy = RESULT[outcome] ?? RESULT.A;
+  const main = mainConcern(S);
+  const picked = main ? [main, ...otherConcerns(S)] : [];
+  const cycle = cycleShort(S);
+  const name = S.name.trim();
+  const fact = STAGE_FACT[outcome] ?? STAGE_FACT.A;
 
   return (
     <Screen id="r1">
-      <p className="eyebrow">Your hormone check</p>
-      <ScreenTitle className="rTitle">{displayName(S.name)}, here is your answer.</ScreenTitle>
-
-      <div className="verdict">
-        <p className="lab">What your answers point to</p>
-        <p className="name">{v.name}</p>
-        <p className="sub">{v.sub(S)}</p>
-        <p className="conf">
-          <span className="srOnly">How clear this read is: </span>
-          {confidence(S)}
-        </p>
+      <div className="resHero">
+        <p className="resKicker">{name ? `${name}, your Hormone Check result` : 'Your Hormone Check result'}</p>
+        <ScreenTitle className="resName">{copy.name}</ScreenTitle>
+        <p className="resLine">{copy.line}</p>
       </div>
-
-      {masked(S) && (
-        <div className="block key">
-          <p className="blabel">One thing to say plainly</p>
-          <p>
-            {S.stopCause === 'coil'
-              ? 'Your coil, implant or injection is stopping the bleed.'
-              : 'Taking the pill without a break is stopping the bleed.'}
-            {' '}So your periods cannot tell us anything here. This read is built from
-            your symptoms and your age instead.
-          </p>
-        </div>
-      )}
-
-      {/* What the guide is, not a link to it. The result above is hers for
-          finishing the check; the guide comes with the bottles. The doctor
-          route sees neither, because it sees no offer at all. */}
-      {outcome !== 'D' && <GuideCard />}
-
-      <ActionBar>
-        <button type="button" className="cta" onClick={() => next()}>Show me how you know &rarr;</button>
-      </ActionBar>
-    </Screen>
-  );
-}
-
-/* ---------------------------------------------------------------- r2 ---- */
-
-/* The read opens on her own answers, as pictures, not as a bar chart. */
-export function R2() {
-  const { S, next } = useQuiz();
-  const sc = score(S);
-  const [shown, setShown] = useState(false);
-  const picked = TILES.filter(([id]) => has(S, id));
-
-  useEffect(() => {
-    const t = setTimeout(() => setShown(true), 260);
-    return () => clearTimeout(t);
-  }, []);
-
-  return (
-    <Screen id="r2">
-      <p className="eyebrow">Here is how I know</p>
-      <ScreenTitle className="rTitle">Your read.</ScreenTitle>
 
       {picked.length > 0 && (
-        <div className="symStrip">
-          {picked.map(([id, label]) => (
-            <figure key={id}>
-              <img src={IMG[id]} alt="" width={540} height={405} loading="lazy" decoding="async" />
-              <figcaption>{label}</figcaption>
-            </figure>
-          ))}
+        <section className="resSec">
+          <p className="blabel">What you told us</p>
+          <div className={`resPics n${Math.min(picked.length, 4)}`}>
+            {picked.map((id, i) => (
+              <figure key={id} className={i === 0 ? 'main' : ''}>
+                <img src={IMG[id]} alt="" width={540} height={405} loading="lazy" decoding="async" />
+                <figcaption>
+                  {i === 0 && picked.length > 1 && <b>Bothers you most</b>}
+                  {LABEL[id]}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+          {(S.pattern || cycle) && (
+            <dl className="resFacts">
+              {S.pattern && <div><dt>How often</dt><dd>{PATTERN_SHORT[S.pattern]}</dd></div>}
+              {cycle && <div><dt>Your cycle</dt><dd>{cycle}</dd></div>}
+            </dl>
+          )}
+        </section>
+      )}
+
+      <div className="block">
+        <p className="blabel">What this means</p>
+        <p>{copy.means(mentioned(S) || 'these changes', picked.length > 1)}</p>
+        {masked(S) && <p>{MASKED_NOTE}</p>}
+      </div>
+
+      {S.want && (
+        <div className="block key">
+          <p className="blabel">What you want most</p>
+          <p className="lead">{WANT_PHRASE[S.want]}</p>
         </div>
       )}
 
-      <div className="scoreCard">
-        <div className="scoreBig">{sc.raw} <small>of 14</small></div>
-        <p className="scoreLab">
-          {sc.pct > 65 ? 'A strong pattern' : sc.pct > 35 ? 'A clear pattern' : 'Early signs'}
-        </p>
+      {/* One fact about women at her stage, and no product yet: the kit and
+          the women who use it come on the next page. */}
+      <section className="resFact" data-proof="result">
+        <p className="blabel">You are not the only one</p>
+        <p className="resFactBig">{fact.fact}</p>
+        <p>{fact.line}</p>
+        <p className="resFactSrc">Source: {fact.source}</p>
+      </section>
 
-        <div className="gauge" role="img" aria-label={`Symptom load ${sc.pct} out of 100`}>
-          <span className="gaugePin" style={{ left: `${shown ? sc.pct : 0}%` }} />
-        </div>
-        <div className="gaugeEnds"><span>Mild</span><span>Moderate</span><span>Severe</span></div>
-
-        <div className="bars">
-          {GROUPS.map((g) => {
-            const n = groupCount(S, g);
-            const m = groupMax(g);
-            const pct = m ? Math.round((n / m) * 100) : 0;
-            return (
-              <div className="barRow" key={g.k}>
-                <b>{g.name}</b>
-                <i>{n} of {m}</i>
-                <span className="barTrack">
-                  <span className="barFill" style={{ width: `${shown ? pct : 0}%` }} />
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <p className="fine">{CANNOT_TELL}</p>
 
       <ActionBar>
-        <button type="button" className="cta" onClick={() => next()}>Why has nothing worked? &rarr;</button>
+        <button type="button" className="cta" onClick={() => next()}>
+          SHOW ME WHAT TO DO NEXT &rarr;
+        </button>
       </ActionBar>
     </Screen>
   );
@@ -132,14 +100,14 @@ export function R2() {
 export function RDoc() {
   const { S, restart } = useQuiz();
   const reason = docReason(S) || 'young';
-  const copy = DOC[reason]!;
+  const copy = DOC[reason];
   const picked = TILES.filter(([id]) => has(S, id)).map(([, label]) => label.toLowerCase());
   const list = picked.length ? picked.join(', ') : 'what you described';
 
   return (
     <Screen id="rDoc">
-      <p className="eyebrow">What to do now</p>
-      <ScreenTitle className="rTitle">Take this to your doctor.</ScreenTitle>
+      <p className="eyebrow">Your Hormone Check</p>
+      <ScreenTitle className="rTitle">{DOC_TITLE}</ScreenTitle>
       <p className="rDeck">{copy.deck}</p>
 
       <div className="block key">

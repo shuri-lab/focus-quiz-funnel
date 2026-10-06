@@ -16,6 +16,9 @@ declare global {
     gtag?: (...args: unknown[]) => void;
     dataLayer?: unknown[];
     clarity?: (...args: unknown[]) => void;
+    _fbq?: unknown;
+    /* Set once, so a re-mount cannot install a second pixel. */
+    __hfMeta?: boolean;
   }
 }
 
@@ -59,6 +62,67 @@ export function pageView(path: string, title: string): void {
   });
 }
 
+/* --------------------------------------------------------------- meta -- */
+
+/**
+ * The Hormone Focus dataset. The same one the landing page uses and the same
+ * one Shopify's Facebook integration posts to, so the ad click, the quiz and
+ * the order all land in one place rather than three.
+ */
+export const META_DATASET_ID = '1614860232058835';
+
+/**
+ * Microsoft's pixel, with Jane's host guard.
+ *
+ * THE GUARD IS THE POINT. If a pixel is already on the page — a host, a tag
+ * manager, a Shopify theme — initialising a second one doubles every
+ * PageView and every report built on it. So we only install and init when
+ * nothing else has, and the events below fire once either way.
+ *
+ * NO PURCHASE IS EVER FIRED HERE. The quiz hands her to Shopify and Shopify
+ * owns the order, through the same dataset and its Conversions API. A
+ * Purchase from this side would be a second count of a sale we did not see.
+ */
+export function initMeta(): void {
+  try {
+    if (window.__hfMeta) return;
+    window.__hfMeta = true;
+
+    const hostPixel = typeof window.fbq === 'function'
+      || !!document.querySelector('script[src*="connect.facebook.net"]');
+
+    if (!hostPixel) {
+      /* Meta's own snippet, as a function rather than an inline tag. */
+      (function (f: Record<string, unknown>, b: Document, e: string, v: string) {
+        if (f.fbq) return;
+        const n = function (...args: unknown[]) {
+          const self = n as unknown as { callMethod?: (...a: unknown[]) => void; queue: unknown[] };
+          if (self.callMethod) self.callMethod(...args);
+          else self.queue.push(args);
+        } as unknown as Record<string, unknown> & ((...a: unknown[]) => void);
+        f.fbq = n;
+        if (!f._fbq) f._fbq = n;
+        n.push = n; n.loaded = true; n.version = '2.0'; n.queue = [];
+        const first = b.getElementsByTagName(e)[0];
+        const t = b.createElement(e) as HTMLScriptElement;
+        t.async = true; t.src = v;
+        first?.parentNode?.insertBefore(t, first);
+      })(window as unknown as Record<string, unknown>, document, 'script',
+         'https://connect.facebook.net/en_US/fbevents.js');
+
+      window.fbq?.('init', META_DATASET_ID);
+      window.fbq?.('track', 'PageView');
+    }
+
+    /* Fires whether or not we own the pixel: one ViewContent for the quiz. */
+    window.fbq?.('track', 'ViewContent', {
+      content_name: 'Hormone Focus quiz',
+      content_ids: ['hormone-focus'],
+      content_type: 'product',
+    });
+  } catch { /* tracking must never break the funnel */ }
+}
+
 /* ------------------------------------------------------------ clarity -- */
 
 /**
@@ -72,7 +136,7 @@ export function pageView(path: string, title: string): void {
  * a throwaway project instead of recording into the real one.
  */
 const CLARITY_ID =
-  (import.meta.env['VITE_CLARITY_ID'] as string | undefined) || 'yk2cnbfcxa';
+  (import.meta.env.VITE_CLARITY_ID as string | undefined) || 'yk2cnbfcxa';
 
 /**
  * Microsoft Clarity. Injected once — the window.clarity guard is what makes a
@@ -99,7 +163,7 @@ export function initClarity(): void {
       t.async = true;
       t.src = 'https://www.clarity.ms/tag/' + i;
       const y = l.getElementsByTagName(r)[0];
-      if (y) y.parentNode?.insertBefore(t, y);
+      y.parentNode?.insertBefore(t, y);
     })(window, document, 'clarity', 'script', CLARITY_ID);
   } catch { /* tracking must never break the funnel */ }
 }
@@ -129,6 +193,13 @@ export const track = {
   quizStep(screen: string, index: number, total: number) {
     push('quiz_step', { screen, step: index, total });
     meta('QuizStep', { screen, step: index });
+  },
+
+  /** The last question answered. Fired before the email gate, so the gap
+      between this and generate_lead is the gate's own drop-off. */
+  quizComplete(outcome: string) {
+    push('quiz_complete', { outcome });
+    meta('QuizComplete', { outcome });
   },
 
   /** The email gate. This is the lead. */
@@ -178,6 +249,12 @@ const AD_PARAMS = [
   'fbclid', 'gclid', 'ttclid', 'src',
   /* Funnel and variant, so a split test can be read on the Shopify side. */
   'hf_funnel', 'hf_variant',
+  /* Which advertorial sent her, carried like any other attribution. Same
+     name and same treatment as the landing page, so one Shopify report
+     reads both doors. */
+  'hf_presell',
+  /* Kept for parity with the landing page's list. Harmless, still useful. */
+  'utm_id',
 ];
 
 const STORE_KEY = 'hf_attribution';
@@ -192,7 +269,11 @@ export function captureAttribution(): void {
       if (v) found[key] = v;
     }
     if (!Object.keys(found).length) return;
-    sessionStorage.setItem(STORE_KEY, JSON.stringify({ ...readAttribution(), ...found }));
+    /* FIRST WINS. What is already stored is the acquisition, and it is not
+       for a later page load to overwrite: a second landing with a partial
+       or absent query, or an internal link someone tags by accident, must
+       not be able to rename where she actually came from. */
+    sessionStorage.setItem(STORE_KEY, JSON.stringify({ ...found, ...readAttribution() }));
   } catch { /* private browsing */ }
 }
 
@@ -221,91 +302,65 @@ export function readAttribution(): Record<string, string> {
  * silently become the direct-to-checkout link.
  */
 /**
- * What the quiz tells Shopify about itself.
+ * What is carried to Shopify, and nothing else.
  *
- * These five are the quiz's own, and they overwrite whatever the ad set,
- * because a Shopify report reads utm_* and nothing else. The ad's originals
- * are not lost — they move to the hf_* pair of each one below.
+ * THE UTMs ARE HERS, NOT OURS. An earlier version of this function set
+ * utm_source=bridge, utm_medium=quiz and utm_content per offer, which
+ * overwrote the acquisition: a woman who arrived from an Instagram DM
+ * reached checkout looking like quiz traffic, and the campaign that actually
+ * paid for her could never be credited. The quiz adds nothing to these five
+ * now — it passes on what it was given.
+ *
+ * Which offer she chose is not encoded here either. The variant in the cart
+ * path already says it, so a parameter saying it again is redundant, and one
+ * carrying her quiz RESULT would put a health inference in an ad URL.
  */
-export const QUIZ_UTM = {
-  source: 'bridge',
-  medium: 'quiz',
-  campaign: 'hf-60day',
-} as const;
+/** The value hf_funnel carries on every cart link the quiz builds. */
+export const QUIZ_FUNNEL = 'quiz';
 
-/** One utm_content per offer, so the store can read bundle mix directly. */
-export const OFFER_UTM_CONTENT: Record<OfferKind, string> = {
-  single: '1bottle',
-  protocol: '2bottle',
-  subscribe: 'sub',
-};
+const PASS_THROUGH = [
+  /* The acquisition, exactly as it arrived. */
+  'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term',
+  /* Click ids keep their own names: the platforms that issued them read
+     them by exact name, so a prefix would break them. */
+  'fbclid', 'gclid', 'ttclid',
+  /* The advertorial she came through, and the campaign id where one was set. */
+  'hf_presell', 'utm_id',
+] as const;
 
 /**
- * Where an incoming utm_* goes once the quiz has taken its name.
+ * The cart link for an offer, carrying the attribution she arrived with.
  *
- * Prefixed rather than dropped: Shopify keeps the whole query on the order's
- * landing-site URL, so both questions stay answerable from one row — where
- * she came from originally, and that she bought through the quiz.
- */
-const ORIGINAL_OF: Record<string, string> = {
-  utm_source: 'hf_src',
-  utm_medium: 'hf_medium',
-  utm_campaign: 'hf_campaign',
-  utm_content: 'hf_content',
-  utm_term: 'hf_term',
-};
-
-/**
- * The cart link: the quiz's attribution, without losing the ad's.
+ * Built with URL and URLSearchParams throughout, so the query is assembled
+ * rather than concatenated and the subscription's existing ?id=&quantity=
+ * &selling_plan= cannot gain a second "?".
  *
- * THE COLLISION, AND HOW IT IS RESOLVED. Shopify attributes on utm_source,
- * utm_medium and utm_campaign. The quiz has to own those or no order can be
- * traced to it. The ad also needs them or no order can be traced to Meta.
- * They cannot both have the same five keys, so the quiz takes them and the
- * ad's values move one prefix across, unchanged and complete.
- *
- * Click ids are NOT prefixed. fbclid, gclid and ttclid are read by exact
- * name by the platforms that issued them; renaming one breaks it.
+ * Nothing is invented. A visitor with no attribution gets a clean cart link
+ * and no empty parameters standing in for the ones she did not have.
  */
 export function shopUrl(
   base: string,
-  outcome: string,
-  angle: string,
+  _outcome: string,
+  _angle: string,
   offer: OfferKind = 'single',
 ): string {
   const url = new URL(cartPath(offer), base);
   const ad = readAttribution();
 
-  /* The cart, not the checkout. Asserted here, not assumed from the base. */
-  url.searchParams.set('storefront', 'true');
-  url.searchParams.set('src', 'quiz');
+  /* The cart, not the checkout. Asserted rather than assumed from the base,
+     because losing it sends her straight to payment. */
+  if (url.pathname.includes(':')) url.searchParams.set('storefront', 'true');
 
-  /* 1. The quiz's own attribution. */
-  url.searchParams.set('utm_source', QUIZ_UTM.source);
-  url.searchParams.set('utm_medium', QUIZ_UTM.medium);
-  url.searchParams.set('utm_campaign', QUIZ_UTM.campaign);
-  url.searchParams.set('utm_content', OFFER_UTM_CONTENT[offer]);
-  /* The angle she came through. Nothing was specified for utm_term, and the
-     landing page she answered is the useful thing to put there. */
-  if (angle) url.searchParams.set('utm_term', angle);
-
-  /* 2. The ad's attribution, preserved beside it rather than under it. */
-  for (const [incoming, kept] of Object.entries(ORIGINAL_OF)) {
-    if (ad[incoming]) url.searchParams.set(kept, ad[incoming]);
+  for (const key of PASS_THROUGH) {
+    const value = ad[key];
+    if (value) url.searchParams.set(key, value);
   }
 
-  /* 3. Click ids, by their real names, because that is how they are read.
-        gclid and ttclid were being captured and then dropped here. */
-  for (const key of ['fbclid', 'gclid', 'ttclid'] as const) {
-    if (ad[key]) url.searchParams.set(key, ad[key]);
-  }
-
-  /* 4. What the quiz knows that no UTM carries. */
-  for (const key of ['hf_funnel', 'hf_variant'] as const) {
-    if (ad[key]) url.searchParams.set(key, ad[key]);
-  }
-  url.searchParams.set('hf_outcome', outcome);
-  url.searchParams.set('hf_offer', offer);
+  /* WHICH DOOR SHE CAME THROUGH, which is not the same question as where she
+     came from. The utm_* above say Instagram or Klaviyo and are left exactly
+     as they arrived; this says the quiz converted her rather than the
+     landing page. Shopify then answers both from one order. */
+  url.searchParams.set('hf_funnel', QUIZ_FUNNEL);
 
   return url.toString();
 }

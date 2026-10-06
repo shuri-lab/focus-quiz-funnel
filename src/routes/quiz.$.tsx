@@ -1,7 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useParams } from "@tanstack/react-router";
+import { Navigate } from "@/lib/rr";
 import { Quiz } from "@/quiz/Quiz";
+import { FIRST_STEP, STEP_SLUG } from "@/quiz/steps";
 
-export const Route = createFileRoute("/quiz")({
+export const Route = createFileRoute("/quiz/$")({
   head: () => ({
     meta: [
       { title: "The Hormone Check" },
@@ -17,5 +19,7 @@ export const Route = createFileRoute("/quiz")({
 });
 
 function QuizRoute() {
-  return <Quiz slug={undefined} />;
+  const { _splat } = useParams({ from: "/quiz/$" });
+  if (!_splat) return <Navigate to={`/quiz/${STEP_SLUG[FIRST_STEP]}`} replace />;
+  return <Quiz />;
 }
