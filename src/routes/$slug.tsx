@@ -26,8 +26,8 @@ function SlugLanding() {
   const known = ANGLES.some((a) => a.slug && a.slug === slug);
   if (!known) return <Navigate to="/" />;
 
-  const isQuizChild = useMatch({ from: "/$slug/quiz", shouldThrow: false });
+  const isQuizChild = useMatch({ from: "/$slug/quiz/$", shouldThrow: false });
   if (isQuizChild) return <Outlet />;
 
-  return <Landing slug={slug} />;
+  return <Landing />;
 }

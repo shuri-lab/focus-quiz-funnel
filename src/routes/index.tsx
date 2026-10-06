@@ -16,5 +16,5 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  return <Landing slug={undefined} />;
+  return <Landing />;
 }

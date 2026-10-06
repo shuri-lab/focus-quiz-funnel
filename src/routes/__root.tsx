@@ -11,7 +11,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { initClarity, pageView } from "../lib/analytics";
+import { initClarity, initMeta, pageView } from "../lib/analytics";
 
 /* TRACKING. GTM-WT4MWLTH is the container and the only tag hard-coded here.
    Meta pixel and GA4 are deliberately not committed: add them as tags INSIDE
@@ -146,6 +146,7 @@ function RootComponent() {
       import('../lib/analytics').then(({ captureAttribution }) => captureAttribution());
       /* No-op unless VITE_CLARITY_ID is set. */
       initClarity();
+      initMeta();
     }
   }, []);
 
