@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Navigate, useParams, useSearch } from '@tanstack/react-router';
+import { Navigate, useParams, useSearchParams } from '@/lib/rr';
 import { usePageMeta } from '../lib/usePageMeta';
 import { track } from '../lib/analytics';
 import { BOTTLE } from '../lib/content';
@@ -31,15 +31,8 @@ import { DOCTOR_LINE, OFFER_FINE_PRINT, FOOTER_LINE } from '../lib/offerCopy';
  * no offer, and the quiz does not render a link to this page on it.
  */
 export function PlanPage() {
-  const { archetype } = useParams({ strict: false }) as { archetype?: string };
-  const search = useSearch({ strict: false }) as Record<string, unknown>;
-
-  /* TanStack hands the query string back parsed; the plan copy reads it as
-     URLSearchParams, so rebuild it here with only the string values. */
-  const params = new URLSearchParams();
-  for (const [k, v] of Object.entries(search)) {
-    if (typeof v === 'string') params.set(k, v);
-  }
+  const { archetype } = useParams();
+  const [params] = useSearchParams();
 
   /* Not one of ours is not a typo to be guessed at. Send her to the front
      door rather than to a plan written for somebody else. */

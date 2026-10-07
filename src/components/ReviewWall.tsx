@@ -82,7 +82,7 @@ export function ReviewWall() {
           key={review.name + review.body.slice(0, 12)}
           review={review}
           /* Every other card carries a face, starting with the first. */
-          {...(i % 2 === 0 && WALL_FACES[i / 2] ? { photo: WALL_FACES[i / 2]! } : {})}
+          photo={i % 2 === 0 ? WALL_FACES[i / 2] : undefined}
         />
       ))}
     </div>

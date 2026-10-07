@@ -5,12 +5,15 @@ import { Screen, ScreenTitle } from '../../components/Screen';
 import { OkendoWall } from '../../components/OkendoWall';
 import { mainConcern, stateKey } from '../../lib/logic';
 import {
-  NEXT_BRIDGE, NEXT_EYEBROW, NEXT_HOW, NEXT_HOW_PIECES, NEXT_INTRO, NEXT_LEAD, NEXT_STEPS,
-  OFFER_DISCLAIMER, nextTitle, triedLine,
+  NEXT_EYEBROW, OFFER_DISCLAIMER, nextTitle, triedLine,
 } from '../../lib/content';
+import {
+  KIT_CLOSE, KIT_INTRO, KIT_PIECES, KIT_TITLE, PRI, THREE_TITLE,
+  cardAcks, threeCards, underCardAcks,
+} from '../../lib/resultCopy';
 import { FacebookComment, Faces, Quote, RatingBadge } from '../../components/Proof';
 import { kitProof } from '../../lib/reviews';
-import { PROTOCOL_PRICE, money } from '../../lib/offer';
+import { PROTOCOL_PRICE, dailyPrice, money } from '../../lib/offer';
 import { INGREDIENTS } from '../../lib/offerCopy';
 import {
   CLOSE_CTA, CLOSE_HEAD, HF_BODY, HF_EYEBROW, HF_HEAD, KIT_CTA, KIT_FAQ, KIT_FAQ_EYEBROW,
@@ -41,6 +44,9 @@ export function R2() {
   const main = mainConcern(S);
   const proof = kitProof(main);
   const tried = triedLine(S);
+  const cards = threeCards(S);
+  const acks = cardAcks(S, cards);
+  const underAcks = underCardAcks(S);
   const href = kitHref(outcome, angle.slug);
 
   /* The bar shows wherever the page has no call to action of its own in
@@ -64,8 +70,17 @@ export function R2() {
       return r.bottom > 0 && r.top < vh * bottomBias;
     };
 
+    /* NOT ON ARRIVAL. The bar used to be up before she had moved, which
+       reads as a pop-up rather than something the page offered her. One
+       screen of scrolling first: by then she is reading, and the bar is a
+       way back to the price rather than an interruption of the first
+       sentence. */
+    const SCROLLED_ENOUGH = () => window.scrollY > window.innerHeight * 0.75;
+
     const update = () => setSticky(
-      !onScreen(offer.current, 0.85) && !onScreen(foot.current, 1),
+      SCROLLED_ENOUGH()
+      && !onScreen(offer.current, 0.85)
+      && !onScreen(foot.current, 1),
     );
 
     update();
@@ -82,25 +97,34 @@ export function R2() {
       <p className="eyebrow">{NEXT_EYEBROW}</p>
       <ScreenTitle className="rTitle">{nextTitle(main)}</ScreenTitle>
 
-      {/* What to do, then the question she is already asking, then the kit as
-          the answer to it, piece by piece. */}
+      {/* Her first three things, chosen from what she ticked rather than a
+          generic list, with what she has already tried acknowledged inside
+          the card it belongs to. Three, never more. Then the kit as the
+          answer to the question the three raise. */}
       <div className="block">
         {tried && <p>{tried}</p>}
-        <p className="lead">{NEXT_LEAD}</p>
-        <p>{NEXT_INTRO}</p>
-        <ul className="nextList">
-          {NEXT_STEPS.map((s) => <li key={s}>{s}</li>)}
-        </ul>
+        <p className="blabel">{THREE_TITLE}</p>
+        <div className="priCards">
+          {cards.map((id) => (
+            <div key={id} className="priCard">
+              <b>{PRI[id].title}</b>
+              {acks[id] && <span className="priAck">{acks[id]}</span>}
+              <span>{PRI[id].body}</span>
+            </div>
+          ))}
+        </div>
+        {underAcks.map((line) => <p key={line}>{line}</p>)}
       </div>
 
       <div className="nextHow">
-        <p className="nextHowQ">{NEXT_HOW}</p>
-        <p className="lead">{NEXT_BRIDGE}</p>
+        <p className="nextHowQ">{KIT_TITLE}</p>
+        <p className="lead">{KIT_INTRO}</p>
         <div className="nextPieces">
-          {NEXT_HOW_PIECES.map(([what, does]) => (
+          {KIT_PIECES.map(([what, does]) => (
             <div key={what}><b>{what}</b><span>{does}</span></div>
           ))}
         </div>
+        <p>{KIT_CLOSE}</p>
         <p className="nextSign">JJ Smith</p>
       </div>
 
@@ -214,7 +238,11 @@ export function R2() {
           happen again whatever an ancestor does. */}
       {sticky && createPortal((
         <div className="kitSticky">
-          <span><b>{money(PROTOCOL_PRICE)}</b> free shipping</span>
+          {/* The day rate, not the ticket price. $74.99 beside a button is
+              the number she has to justify; $1.25 a day is the one she can
+              picture. Derived from PROTOCOL_PRICE / 60, so it follows the
+              price rather than being typed beside it. */}
+          <span className="kitStickyFrom">From {dailyPrice()} a day</span>
           {/* THIS TAKES HER TO THE OFFER, IT DOES NOT BUY. She is somewhere
               down a long page with no price in view; the honest move is to
               put the choice back in front of her and let her pick, not to
