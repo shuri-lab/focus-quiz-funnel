@@ -683,6 +683,8 @@ h1, h2 { margin: 0; text-wrap: balance; letter-spacing: -.022em; line-height: 1.
   box-shadow: var(--shadow);
   font-size: var(--t-small); font-weight: 700; color: var(--ink);
 }
+/* Four faces, overlapped, the way a rating badge stacks them. Cropped a
+   little high because these are portraits taken at arm's length. */
 .proofFaces { display: inline-flex; }
 .proofFaces i {
   width: 30px; height: 30px; border-radius: 50%;

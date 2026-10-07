@@ -17,6 +17,8 @@ const ALL_SYMPTOMS = [IMG.sweats, IMG.weight, IMG.sleep, IMG.bloat, IMG.mood, IM
 /* Four faces, as the landing page's rating badge carries. */
 const FACES = CUSTOMERS.slice(0, 4);
 
+
+
 /**
  * THE COVER. One screen: the headline, one line, one button.
  *
@@ -69,6 +71,8 @@ export function Landing() {
                   into the left of it, the claim set against white so it
                   reads as one object rather than a line of loose text. */}
               <p className="proofPill">
+                {/* Customers, because the claim beside them counts customers.
+                    Four, overlapped, as JJ's rating badge stacks them. */}
                 <span className="proofFaces" aria-hidden="true">
                   {FACES.map((src) => (
                     <i key={src} style={{ backgroundImage: `url(${src})` }} />

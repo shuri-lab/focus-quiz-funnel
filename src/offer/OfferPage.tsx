@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useParams } from '@tanstack/react-router';
+import { useParams } from '@/lib/rr';
 import { angleBySlug } from '../lib/angles';
 import { usePageMeta } from '../lib/usePageMeta';
 import { shopUrl, track } from '../lib/analytics';
@@ -70,7 +70,7 @@ interface Props {
 }
 
 export function OfferPage({ live = false }: Props) {
-  const { slug } = useParams({ strict: false }) as { slug?: string };
+  const { slug } = useParams();
   const angle = angleBySlug(slug);
 
   /* /live is not an angle, so it brings its own hero and its own recognition
@@ -98,7 +98,7 @@ export function OfferPage({ live = false }: Props) {
     const el = heroBuy.current;
     if (!el) return;
     const io = new IntersectionObserver(
-      ([entry]) => setShowSticky(!entry!.isIntersecting),
+      ([entry]) => setShowSticky(!entry.isIntersecting),
       { threshold: 0 },
     );
     io.observe(el);
