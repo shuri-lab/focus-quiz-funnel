@@ -50,6 +50,15 @@ export interface QuizState {
   want: WantId | '';
   name: string;
   email: string;
+  /**
+   * She came from JJ's own list, so the email screen is stepped over.
+   *
+   * Seeded once from the link when the quiz state is created. It lives on
+   * the state rather than being read from storage inside shouldSkip, which
+   * keeps that function pure and keeps the 560-combination routing test
+   * honest: a value it does not set is a value that cannot change routing.
+   */
+  skipEmail: boolean;
   /** Ticked opt-in. No address is sent anywhere while this is false. */
   consent: boolean;
 }
@@ -59,7 +68,7 @@ export function createState(): QuizState {
   return {
     sym: [], main: '', age: '', cycle: '', twelve: '', pattern: '',
     tried: [], want: '',
-    name: '', email: '', consent: false,
+    name: '', email: '', consent: false, skipEmail: false,
   };
 }
 
@@ -176,12 +185,23 @@ export function stateKey(S: QuizState): Outcome {
     return periScore(S) >= 5 ? 'B' : 'A';
   }
 
+  /* PERIODS STOPPED.
+   *
+   * FIFTY AND OVER IS MENOPAUSE, WHATEVER SHE SAYS ABOUT THE TWELVE MONTHS.
+   * Jane, 8 October 2026, from the route table review. The rule used to read
+   * the follow-up first, which made the answer inconsistent across one age
+   * band: at 50 to 59, "not sure" gave menopause but "no" gave perimenopause.
+   * A woman in her fifties whose periods have stopped was then told she was in
+   * "the years before your periods stop", which is wrong to her whatever the
+   * textbook says about twelve months.
+   *
+   * The forties are unchanged and still read the follow-up: twelve months or
+   * more is menopause, or early menopause at 40 to 44; under twelve months or
+   * not sure is perimenopause. Under forty left on the doctor route above, and
+   * medication or surgery was read as `masked` above. */
   if (S.cycle === 'stopped') {
-    /* Under forty went to the doctor above. */
+    if (older(S)) return 'C';
     if (S.twelve === 'yes') return S.age === '40-44' ? 'E' : 'C';
-    /* Under twelve months, or she cannot say how long. */
-    if (S.age === '60-plus') return 'C';
-    if (S.twelve === 'unsure' && fifties(S)) return 'C';
     return 'B';
   }
 
@@ -268,6 +288,10 @@ export function shouldSkip(S: QuizState, id: ScreenId): boolean {
   if (doctorExit(S) && AFTER_CYCLE.includes(id)) return true;
   if (id === 'rDoc') return stateKey(S) !== 'D';
   if (id === 'r2') return !seesOffer(S);
+  /* THE EMAIL SCREEN, STEPPED OVER FOR A WOMAN ALREADY ON THE LIST. Last,
+     so every refusal above it still wins: the doctor route still exits
+     before the gate whether or not she arrived from an email. */
+  if (id === 'gate') return S.skipEmail;
   return false;
 }
 

@@ -109,7 +109,7 @@ export const PATTERN_OPTIONS: [Pattern, string][] = [
   ['comego', 'They come and go without a clear pattern'],
   ['weekly', 'Most weeks'],
   ['daily', 'Almost every day'],
-  ['untracked', 'I have not really tracked them yet'],
+  ['untracked', "I'm not sure"],
 ];
 
 export const TRIED_OPTIONS: [TriedId, string][] = [
@@ -170,8 +170,13 @@ export const WANT_PHRASE: Record<WantId, string> = {
 
 /* ONE CLEAR ANSWER. She gets one of four named results, said once, in one
    sentence, with no "you may be between two" and no list of what she is
-   not. It is still a pattern and never "you have": the sentence says her
-   answers match it. Jane, 2 October 2026. */
+   not. It is never "you have" and never "you are in": the sentence says her
+   answers MAY POINT TO it. Jane, 2 October 2026, softened 7 and 8 October 2026.
+
+   `name` is the bare stage word. It is NOT printed on the result screen any
+   more (see reveal.tsx) and is kept because `result_route` in the Klaviyo
+   contract is derived per outcome and the email flow branches on the stage.
+   `line` is what she actually reads. */
 
 export interface ResultCopy {
   /** The answer, big. */
@@ -185,22 +190,22 @@ export interface ResultCopy {
 export const RESULT: Record<Exclude<Outcome, 'D'>, ResultCopy> = {
   A: {
     name: 'Hormonal imbalance',
-    line: 'Your answers match the pattern of a hormonal imbalance.',
+    line: 'Your answers may point to a hormonal imbalance.',
     means: (x) => `Your hormones rise and fall through every month. When they shift out of their usual rhythm, it can show up as ${x}.`,
   },
   B: {
     name: 'Perimenopause',
-    line: 'Your answers match the pattern of perimenopause, the years before your periods stop.',
-    means: (x, many) => `In perimenopause your hormones start to rise and fall unevenly. That is why ${x} can ${many ? 'all show up at the same time' : 'show up'}.`,
+    line: 'Your answers may point to perimenopause, the years before your periods stop.',
+    means: (x, many) => `In the years before periods stop, hormones start to rise and fall unevenly. That is why ${x} can ${many ? 'all show up at the same time' : 'show up'}.`,
   },
   C: {
     name: 'Menopause',
-    line: 'Your answers match the pattern of menopause.',
+    line: 'Your answers may point to menopause.',
     means: (x) => `After your periods stop, your hormones settle at a new, lower level. That is why ${x} can keep showing up.`,
   },
   E: {
     name: 'Early menopause',
-    line: 'Your answers match the pattern of early menopause, which starts before 45.',
+    line: 'Your answers may point to early menopause, which starts before 45.',
     means: (x) => `Your hormones are settling at a new, lower level earlier than most women. That is why ${x} can show up. Ask your doctor to confirm it, so you know where you stand.`,
   },
 };
@@ -268,24 +273,17 @@ export const CANNOT_TELL =
 
 /* ---------------------------------------------------------- what to do next -- */
 
-/* THE 60 DAYS, BUILT TO THE KIT. It names her biggest concern, gives her the
-   five things to do, asks the question she is already asking (how?), and
-   answers it with the kit, piece by piece. Jane, 3 October 2026.
-   It is a plan for her, never a promised result by a date. */
+/* THE 60 DAYS, BUILT TO THE KIT. It names her biggest concern, asks the
+   question she is already asking (how?), and answers it with the kit, piece
+   by piece. Jane, 3 October 2026.
+   It is a plan for her, never a promised result by a date.
 
-/** What her 60 days are for, by the concern she named. */
-export const PLAN_FOR: Record<SymptomId, string> = {
-  weight: 'your weight',
-  sleep: 'better sleep',
-  energy: 'more energy',
-  sweats: 'cooler days and nights',
-  bloat: 'less bloating',
-  mood: 'a calmer, clearer you',
-};
+   `PLAN_FOR` and `nextTitle()` were removed on 8 October 2026. They built the
+   old headline, "Your 60-day plan for your weight", which promised her a plan
+   before she had read one. The result page now opens with where to start:
+   see START_TITLE in resultCopy.ts. Nothing else read them. */
 
 export const NEXT_EYEBROW = 'Your next 60 days';
-export const nextTitle = (main: SymptomId | ''): string =>
-  main ? `Your 60-day plan for ${PLAN_FOR[main]}` : 'Your 60-day plan';
 
 export const NEXT_LEAD = 'You do not have to fix everything at once.';
 export const NEXT_INTRO = 'For the next 60 days, you focus on five things, every day:';

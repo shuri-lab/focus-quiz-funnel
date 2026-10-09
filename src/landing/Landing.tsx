@@ -12,7 +12,18 @@ import {
    one symptom to show, so it shows the lot, moving — the way JJ's own page
    runs its customer photographs past on a phone. An angle cover does have
    one, and shows that one, still and large. */
-const ALL_SYMPTOMS = [IMG.sweats, IMG.weight, IMG.sleep, IMG.bloat, IMG.mood, IMG.energy];
+/* SHUFFLED SO NO TWO NEIGHBOURS LOOK ALIKE.
+ *
+ * Three of the six are the same photograph to a glance — a woman seated at a
+ * bright kitchen table: bloating, mood and energy. Two are a dark bedroom at
+ * night: sleep and night sweats. Only weight is neither.
+ *
+ * Run in their listed order the three kitchen shots collided, so the rail
+ * looked like one picture sliding past rather than six women. They alternate
+ * now, and because the rail loops, the last and the first differ too.
+ *
+ * It still opens on weight, which is the first thing the headline names. */
+const ALL_SYMPTOMS = [IMG.weight, IMG.bloat, IMG.sleep, IMG.mood, IMG.sweats, IMG.energy];
 
 /* Four faces, as the landing page's rating badge carries. */
 const FACES = CUSTOMERS.slice(0, 4);
