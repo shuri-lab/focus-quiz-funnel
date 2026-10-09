@@ -1,4 +1,7 @@
+import { useEffect } from 'react';
 import { useQuiz } from '../context';
+import { submitListLead } from '../../lib/leads';
+import { readListLink } from '../../lib/listLink';
 import { Screen, ScreenTitle, ActionBar } from '../../components/Screen';
 import {
   TILES, BRAND, docReason, has, mainConcern, masked, otherConcerns, stateKey,
@@ -7,21 +10,29 @@ import {
   CANNOT_TELL, DOC, DOC_TITLE, IMG, MASKED_NOTE, PATTERN_SHORT, QUIZ_DISCLAIMER, RESULT,
   STAGE_FACT, WANT_PHRASE, cycleShort,
 } from '../../lib/content';
-import { CLOSE, HEAD, PAT, SYM, meansFor, symExtra } from '../../lib/resultCopy';
+import {
+  CLOSE, EARLY_DOCTOR_LINE, HEAD, PAT, STAGE_LINE, SYM, meansFor, symExtra,
+} from '../../lib/resultCopy';
 import type { Outcome, SymptomId } from '../../lib/logic';
 
 const LABEL = Object.fromEntries(TILES) as Record<SymptomId, string>;
 
 /* ---------------------------------------------------------------- r1 ---- */
 
-/* HER RESULT. One named answer at the top, said in one sentence. Then what
- * she told us, with the same pictures she tapped, what it means with her own
- * symptoms in it, and one fact about women at her stage.
+/* HER RESULT. What her answers MAY POINT TO, at the top, in one sentence. Then
+ * what she told us, with the same pictures she tapped, what it means with her
+ * own symptoms in it, and one fact about women at her stage.
  *
- * It is a pattern and never "you have", and it never tells her she might be
- * one thing or another: she gets one of four answers. */
+ * SOFTENED 7 OCTOBER. The stage word never stands alone as her result, and no
+ * sentence says she has or is in a stage: the headline is `copy.line`, which
+ * always begins "Your answers may point to", and `copy.name` (the bare stage word,
+ * which still feeds Klaviyo's `result_route`) is not printed on the screen.
+ * STAGE_LINE then says it is a normal stage with real support.
+ *
+ * It never tells her she might be one thing or another: she gets one of four
+ * answers. */
 export function R1() {
-  const { S, next } = useQuiz();
+  const { S, angle, next } = useQuiz();
   const outcome = stateKey(S) as Exclude<Outcome, 'D'>;
   const copy = RESULT[outcome] ?? RESULT.A;
   const main = mainConcern(S);
@@ -30,12 +41,27 @@ export function R1() {
   const name = S.name.trim();
   const fact = STAGE_FACT[outcome] ?? STAGE_FACT.A;
 
+  /* SHE PRESSED NOTHING, SO THIS IS WHERE THE EVENT GOES.
+   *
+   * A woman who typed her address sends HF Quiz Completed by pressing the
+   * button on the email screen. A woman from JJ's list never sees that
+   * screen, so her completion is sent when her result opens instead.
+   *
+   * submitListLead is the one that decides whether anything leaves: without
+   * a profile id it sends nothing and reports success, which is the
+   * skip_email=1 test mode, and it refuses a second send in the same
+   * session so a reload or the back button cannot run JJ's flow twice. */
+  useEffect(() => {
+    if (!S.skipEmail) return;
+    void submitListLead(S, outcome, angle.slug, readListLink().profileId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <Screen id="r1">
       <div className="resHero">
         <p className="resKicker">{name ? `${name}, your Hormone Check result` : 'Your Hormone Check result'}</p>
-        <ScreenTitle className="resName">{copy.name}</ScreenTitle>
-        <p className="resLine">{copy.line}</p>
+        <ScreenTitle className="resName">{copy.line}</ScreenTitle>
       </div>
 
       {picked.length > 0 && (
@@ -70,6 +96,8 @@ export function R1() {
         {meansFor(outcome).map((para) => <p key={para}>{para}</p>)}
         {masked(S) && <p>{MASKED_NOTE}</p>}
         {main && <p>{CLOSE[main]}</p>}
+        <p>{STAGE_LINE}</p>
+        {outcome === 'E' && <p>{EARLY_DOCTOR_LINE}</p>}
         {S.pattern && <p>{PAT[S.pattern]}</p>}
       </div>
 

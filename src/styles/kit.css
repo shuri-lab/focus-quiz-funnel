@@ -297,7 +297,10 @@
   content: '+'; position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
   font-size: 22px; font-weight: 500; color: var(--plum); line-height: 1;
 }
-.kitFaq details[open] summary::after { content: '2'; }
+/* A MINUS, NOT A MANGLED PASTE. This held U+0091 followed by '2', so
+   every opened question showed a stray 2 where the close affordance
+   belongs. U+2212 is the minus proper, and is not an en dash. */
+.kitFaq details[open] summary::after { content: '\2212'; }
 .kitFaq details p {
   margin: 0; padding: 0 16px 16px; font-family: var(--serif); font-size: var(--t-sub);
   line-height: 1.48; color: var(--ink-2);
@@ -350,13 +353,14 @@
   margin: 0; font-size: 12.5px; font-weight: 700; letter-spacing: .14em;
   text-transform: uppercase; color: var(--plum-2);
 }
+/* SOFTENED 7 OCTOBER. This used to hold one stage word ("Perimenopause") at
+   clamp(34px, 10vw, 46px). It now holds the whole "Your answers may point to ..."
+   sentence, so it is sized as a title rather than a display word and given a
+   measure to wrap against. `.resLine` went with the bare stage word. */
 .resName {
-  margin: 8px 0 0; font-family: var(--sans); font-weight: 800; letter-spacing: -.03em;
-  font-size: clamp(34px, 10vw, 46px); line-height: 1.04; color: var(--plum);
-}
-.resLine {
-  margin: 10px auto 0; max-width: 34ch; font-size: var(--t-body); line-height: 1.4;
-  color: var(--ink); font-weight: 600;
+  margin: 8px auto 0; max-width: 26ch; font-family: var(--sans); font-weight: 800;
+  letter-spacing: -.02em; font-size: clamp(23px, 6vw, 31px); line-height: 1.18;
+  color: var(--plum); text-wrap: balance;
 }
 
 .resSec { margin-top: 24px; }
@@ -449,6 +453,75 @@
 .nextPieces span { font-size: 14.5px; line-height: 1.4; color: var(--ink-2); }
 .nextSign { margin: 12px 0 0; font-family: var(--serif); font-style: italic; font-size: 17px; color: var(--plum); text-align: right; }
 
+/* THE RESULT PAGE, REORDERED 8 OCTOBER 2026.
+   One idea per screen on a phone, so these are spaced apart rather than
+   packed: the bridge gets air on both sides, and each Kit piece is its own
+   row. Nothing shrinks to fit. */
+
+/* The paragraph between her three things and the Kit. */
+.bridge {
+  margin: 26px 0 0; font-size: var(--t-body); line-height: 1.5; color: var(--ink);
+}
+
+/* The Kit opening runs to two paragraphs, so the second one needs its own air
+   rather than sitting tight under the first. */
+.nextHow .lead + p { margin: 10px 0 0; font-size: var(--t-sub); line-height: 1.5; color: var(--ink-2); }
+
+/* Why sixty days, for the concern she named, under its own heading. Set apart
+   from the opening above it so the two are not read as one block of text. */
+.why60 {
+  margin: 18px 0 0; padding: 14px 16px; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--line);
+}
+.why60T {
+  margin: 0 0 6px; font-weight: 700; font-size: var(--t-sub); color: var(--plum);
+}
+.why60 p + p, .why60 > p:last-child {
+  margin: 0; font-size: var(--t-sub); line-height: 1.5; color: var(--ink-2);
+}
+
+.kitPiecesT { margin: 20px 0 0; }
+
+/* The four pieces: an image slot on the left, one line on the right. */
+.kitRows { display: grid; gap: 10px; margin-top: 10px; }
+.kitRow {
+  display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center;
+  padding: 12px 14px; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--line);
+}
+/* NOT `.kitShot`. That class is the product photograph in KitOffer.tsx, and a
+   second rule of the same name here restyled it to a 64px lilac square on the
+   offer page. Empty until David supplies the pictures, and holding its own
+   space so the rows do not jump when he does. */
+/* THE FOUR PIECES, PICTURED. These were empty lilac squares — a placeholder
+   that read as a missing image rather than a product. Each row now carries
+   the thing it names, contained rather than cropped, because a tablet cover
+   and a bottle are different shapes and both have to be whole. */
+.kitPieceShot {
+  width: 64px; aspect-ratio: 1; border-radius: 10px;
+  background: var(--wash-2); border: 1px solid var(--line-2);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  flex: 0 0 auto;
+}
+.kitPieceShot[data-kit-shot='guide']   { background-image: url('/img/kit-guide.png'); }
+.kitPieceShot[data-kit-shot='recipes'] { background-image: url('/img/kit-recipes.png'); }
+.kitPieceShot[data-kit-shot='tracker'] { background-image: url('/img/kit-tracker.png'); }
+/* The two-bottle shot, not the catalogue photograph: it is transparent, so
+   it sits in the tile like the other three, and the line beside it says two
+   bottles. */
+.kitPieceShot[data-kit-shot='focus']   { background-image: url('/img/offer-2-bottles.png'); }
+.kitSay { display: grid; gap: 4px; }
+.kitSay span { font-size: 15px; line-height: 1.45; color: var(--ink); }
+/* The claim is never the headline. */
+.kitClaim { font-size: 12.5px; line-height: 1.4; color: var(--ink-3); }
+
+@media (width >= 560px) {
+  .kitRow { grid-template-columns: 84px 1fr; gap: 16px; }
+  .kitPieceShot { width: 84px; }
+}
+
 .preProof { margin-top: 30px; }
 .preProof .kitRev { margin-top: 12px; }
 
@@ -535,3 +608,49 @@
 .priCard b { font-size: 15.5px; font-weight: 700; color: var(--plum); }
 .priCard span { font-size: 14.5px; line-height: 1.4; color: var(--ink-2); }
 .priCard .priAck { color: var(--ink); font-weight: 600; }
+
+
+/* ----------------------------------------------- down to every review --- */
+
+.kitAllRevs {
+  display: inline-block; margin-top: 16px;
+  font-size: var(--t-sub); font-weight: 800; color: var(--plum);
+  text-underline-offset: 3px;
+}
+
+/* ------------------------------------------------ nine women on camera --- */
+
+.vidGrid {
+  display: grid; gap: 10px; margin-top: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (min-width: 640px)  { .vidGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.vid {
+  position: relative; aspect-ratio: 9 / 16;
+  border-radius: 14px; overflow: hidden;
+  background: var(--wash); border: 1px solid var(--line);
+}
+.vid iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+/* The poster is the button, so the whole card is the tap target. */
+.vidPoster {
+  display: block; width: 100%; height: 100%; padding: 0;
+  border: 0; background: none; cursor: pointer;
+}
+.vidPoster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.vidPlay {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 46px; height: 46px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: rgba(255, 255, 255, .92); color: var(--plum);
+  box-shadow: 0 6px 18px -6px rgba(36, 31, 46, .6);
+}
+
+/* JJ's own Facebook comment, beside the first block of proof. */
+.fbShot { margin-top: 16px; }
+.fbShot img {
+  width: 100%; max-width: 420px; margin-inline: auto;
+  border-radius: 14px; border: 1px solid var(--line); display: block;
+}

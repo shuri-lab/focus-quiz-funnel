@@ -3,12 +3,14 @@ import { createPortal } from 'react-dom';
 import { useQuiz } from '../context';
 import { Screen, ScreenTitle } from '../../components/Screen';
 import { OkendoWall } from '../../components/OkendoWall';
+import { VideoWall } from '../../components/VideoWall';
 import { mainConcern, stateKey } from '../../lib/logic';
 import {
-  NEXT_EYEBROW, OFFER_DISCLAIMER, nextTitle, triedLine,
+  NEXT_EYEBROW, OFFER_DISCLAIMER, triedLine,
 } from '../../lib/content';
 import {
-  KIT_CLOSE, KIT_INTRO, KIT_PIECES, KIT_TITLE, PRI, THREE_TITLE,
+  BRIDGE, KIT_CLOSE, KIT_FOCUS_CLAIM, KIT_INTRO, KIT_PIECES, KIT_PIECES_TITLE,
+  KIT_PIECE_IDS, KIT_TITLE, PRI, START_TITLE, WHY60, WHY60_TITLE,
   cardAcks, threeCards, underCardAcks,
 } from '../../lib/resultCopy';
 import { FacebookComment, Faces, Quote, RatingBadge } from '../../components/Proof';
@@ -17,7 +19,8 @@ import { PROTOCOL_PRICE, dailyPrice, money } from '../../lib/offer';
 import { INGREDIENTS } from '../../lib/offerCopy';
 import {
   CLOSE_CTA, CLOSE_HEAD, HF_BODY, HF_EYEBROW, HF_HEAD, KIT_CTA, KIT_FAQ, KIT_FAQ_EYEBROW,
-  KIT_FAQ_HEAD, PROOF_EYEBROW, PROOF_HEAD, PROOF_MORE_HEAD, PROOF_NOTE, WHY_BODY,
+  KIT_FAQ_HEAD, PROOF_ALL_LINK, PROOF_EYEBROW, PROOF_HEAD, PROOF_MORE_HEAD,
+  PROOF_NOTE, WHY_BODY,
   WHY_EYEBROW, WHY_HEAD,
 } from '../../lib/kitCopy';
 import { KitGuarantee, KitOffer, kitHref } from '../../components/KitOffer';
@@ -25,14 +28,23 @@ import { track } from '../../lib/analytics';
 
 /* ---------------------------------------------------------------- r2 ---- */
 
-/* HER 60 DAYS, AND THE KIT. One page she scrolls, not a run of screens she
-   taps through.
+/* WHERE TO START, AND THEN THE KIT. One page she scrolls, not a run of
+   screens she taps through.
  *
- * The order: her 60-day plan, named for the concern she picked; the five
- * things to do; the question she is asking (how?); the kit as the answer,
- * piece by piece; women who have done it, before the price; the offer; more
- * proof, why sixty days, the formula, the guarantee, questions, one last
- * review and the button again. */
+ * REORDERED 8 OCTOBER 2026, to Jane's pack. The page used to open "Your 60-day
+ * plan for your weight", which promised a plan before she had read one. It now
+ * says where to start, gives her the three things, names the hard part about
+ * doing them (the bridge), and only then offers the Kit as the answer to that.
+ *
+ * The order: where to start, named for the concern she picked; her three
+ * things; the bridge; the Kit, its opening, why it runs sixty days for HER
+ * concern, and the four pieces; women who have done it, before the price; the
+ * offer; more proof, why sixty days, the formula, the guarantee, questions,
+ * one last review and the button again.
+ *
+ * The ingredient sentences (DIM, Calcium D-Glucarate, BioPerine) are not on
+ * this page any more. They are on the offer page below, where she is reading
+ * about the product rather than about what to do next. */
 /** Respect the setting rather than animate over it. */
 const prefersReducedMotion = () =>
   typeof window !== 'undefined'
@@ -95,7 +107,9 @@ export function R2() {
   return (
     <Screen id="r2">
       <p className="eyebrow">{NEXT_EYEBROW}</p>
-      <ScreenTitle className="rTitle">{nextTitle(main)}</ScreenTitle>
+      <ScreenTitle className="rTitle">
+        {main ? START_TITLE[main] : 'Start with these 3'}
+      </ScreenTitle>
 
       {/* Her first three things, chosen from what she ticked rather than a
           generic list, with what she has already tried acknowledged inside
@@ -103,7 +117,6 @@ export function R2() {
           answer to the question the three raise. */}
       <div className="block">
         {tried && <p>{tried}</p>}
-        <p className="blabel">{THREE_TITLE}</p>
         <div className="priCards">
           {cards.map((id) => (
             <div key={id} className="priCard">
@@ -116,14 +129,44 @@ export function R2() {
         {underAcks.map((line) => <p key={line}>{line}</p>)}
       </div>
 
+      {/* The hard part, named before the thing that helps with it. */}
+      <p className="bridge">{BRIDGE}</p>
+
       <div className="nextHow">
         <p className="nextHowQ">{KIT_TITLE}</p>
-        <p className="lead">{KIT_INTRO}</p>
-        <div className="nextPieces">
-          {KIT_PIECES.map(([what, does]) => (
-            <div key={what}><b>{what}</b><span>{does}</span></div>
+        {KIT_INTRO.map((para, i) => (
+          <p key={para} className={i === 0 ? 'lead' : undefined}>{para}</p>
+        ))}
+
+        {/* Why sixty days, under its own heading, said about the thing she
+            actually came for. */}
+        {main && (
+          <div className="why60">
+            <p className="why60T">{WHY60_TITLE}</p>
+            <p>{WHY60[main]}</p>
+          </div>
+        )}
+
+        {/* One row per piece: an image slot on the left, one line on the
+            right. The slots are empty until David supplies the pictures.
+            `kitPieceShot` and not `kitShot`: that one is already the product
+            photograph on the offer below, and reusing it restyled the wrong
+            image. */}
+        <p className="blabel kitPiecesT">{KIT_PIECES_TITLE}</p>
+        <div className="kitRows">
+          {KIT_PIECE_IDS.map((id) => (
+            <div key={id} className={`kitRow kitRow-${id}`}>
+              <div className="kitPieceShot" data-kit-shot={id} aria-hidden="true" />
+              <div className="kitSay">
+                <span>{KIT_PIECES[id]}</span>
+                {/* The claim is never the headline: it sits under the dose
+                    line, small, on the bottle row alone. */}
+                {id === 'focus' && <small className="kitClaim">{KIT_FOCUS_CLAIM}</small>}
+              </div>
+            </div>
           ))}
         </div>
+
         <p>{KIT_CLOSE}</p>
         <p className="nextSign">JJ Smith</p>
       </div>
@@ -135,12 +178,39 @@ export function R2() {
         <Faces count={6} />
         <RatingBadge />
         {proof.lead[0] && <Quote review={proof.lead[0]} />}
+        <FacebookComment />
+        {/* A way down to all of them, rather than asking her to scroll and
+            hope. Same move as JJ's page: the rating is the link. */}
+        <a className="kitAllRevs" href="#all-reviews">{PROOF_ALL_LINK}</a>
       </section>
 
       {/* ------------------------------------------------ the offer ---- */}
       <section className="kitBand" ref={offer}>
         <KitOffer outcome={outcome} angle={angle.slug} />
       </section>
+
+      {/* THE GUARANTEE ANSWERS THE PRICE, so it follows it rather than
+          sitting five screens below. The questions follow the guarantee for
+          the same reason: both are what she wants the moment she has seen
+          what it costs. David's order. */}
+      <section className="kitBand teal">
+        <KitGuarantee />
+      </section>
+
+      {/* ------------------------------------------------- questions ---- */}
+      <section className="kitSec">
+        <p className="kitEyebrow">{KIT_FAQ_EYEBROW}</p>
+        <h2 className="kitH2">{KIT_FAQ_HEAD}</h2>
+        <div className="kitFaq">
+          {KIT_FAQ.map(([q, a]) => (
+            <details key={q}>
+              <summary>{q}</summary>
+              <p>{a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
 
       {/* ------------------------------------------- proof, block 1 ---- */}
       <section className="kitSec">
@@ -178,8 +248,10 @@ export function R2() {
           two cannot disagree about what customers said. The authored reviews
           below are the fallback: if Okendo is slow, blocked or down she reads
           customers rather than a spinner. */}
-      <section className="kitSec">
+      <section className="kitSec" id="all-reviews">
         <h2 className="kitH2">{PROOF_MORE_HEAD}</h2>
+        {/* Nine of them on camera, before the written ones. */}
+        <VideoWall />
         <OkendoWall
           fallback={(
             <>
@@ -190,29 +262,10 @@ export function R2() {
             </>
           )}
         />
-        <FacebookComment />
         <p className="kitNote">{PROOF_NOTE}</p>
       </section>
 
       {/* --------------------------------------------- the guarantee ---- */}
-      <section className="kitBand teal">
-        <KitGuarantee />
-      </section>
-
-      {/* ------------------------------------------------- questions ---- */}
-      <section className="kitSec">
-        <p className="kitEyebrow">{KIT_FAQ_EYEBROW}</p>
-        <h2 className="kitH2">{KIT_FAQ_HEAD}</h2>
-        <div className="kitFaq">
-          {KIT_FAQ.map(([q, a]) => (
-            <details key={q}>
-              <summary>{q}</summary>
-              <p>{a}</p>
-            </details>
-          ))}
-        </div>
-      </section>
-
       {/* ------------------------------- one last review, and the button ---- */}
       <section className="kitSec kitClose">
         <div data-proof="closing"><Quote review={proof.closing} long /></div>

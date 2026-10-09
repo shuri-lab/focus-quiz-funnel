@@ -44,16 +44,33 @@ const KLAVIYO_SUBSCRIPTIONS = 'https://a.klaviyo.com/client/subscriptions/';
 /**
  * The list she is subscribed to when she ticks the box.
  *
- * NULL UNTIL THE LIST ID IS SUPPLIED. Set it to the six-character id of the
- * list the quiz should feed (Klaviyo: Lists & Segments, the list, Settings),
- * and the subscription call below switches on. Nothing else changes.
+ * Supplied by David on 8 October. Until it was set, the quiz created her
+ * profile and fired the event but never recorded consent anywhere, so
+ * Klaviyo skipped her as "not subscribed" and the post-quiz flow never
+ * reached her. Every address collected before this date is on a profile
+ * that is not on this list.
  */
-export const KLAVIYO_LIST_ID: string | null = null;
+export const KLAVIYO_LIST_ID: string | null = 'TfxMKk';
 
 /** Where the consent came from, as Klaviyo shows it on her profile. */
 export const KLAVIYO_SOURCE = 'Hormone Check quiz';
 
-/** The subscription request, built on its own so a test can hold it to the API. */
+/**
+ * The subscription request, built on its own so a test can hold it to the API.
+ *
+ * NO `subscriptions` / `consent` FIELD, AND THAT IS DELIBERATE. It used to
+ * carry `subscriptions: { email: { marketing: { consent: 'SUBSCRIBED' } } }`,
+ * copied from the server-side bulk-subscribe job, where it is required. This
+ * endpoint is not that one: it rejects the field outright with
+ *
+ *   400 'subscriptions' is not a valid field for the resource 'profile'
+ *
+ * before it even looks at the list, so every call failed and `subscribe()`
+ * returned false for everyone. Consent is not a field here because asking
+ * this endpoint IS the consent - that is what `custom_source` labels, and
+ * what Klaviyo shows on her profile. Verified against the live API on
+ * revision 2024-10-15; if that revision changes, re-check this shape.
+ */
 export function subscriptionBody(email: string, listId: string) {
   return {
     data: {
@@ -63,10 +80,7 @@ export function subscriptionBody(email: string, listId: string) {
         profile: {
           data: {
             type: 'profile',
-            attributes: {
-              email,
-              subscriptions: { email: { marketing: { consent: 'SUBSCRIBED' } } },
-            },
+            attributes: { email },
           },
         },
       },
@@ -110,6 +124,138 @@ const OUTCOME_NAME: Record<Exclude<Outcome, 'D'>, string> = {
 /** The ad parameters worth carrying onto the profile. */
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'] as const;
 
+/**
+ * What the event says about her, shared by both paths.
+ *
+ * Extracted so the woman from JJ's list and the woman who typed her address
+ * are described identically in Klaviyo. A flow branching on `result_route`
+ * cannot tell them apart, and should not have to.
+ *
+ * `consent_at` is the moment the event is built. On the typed path that is
+ * the moment she ticked the box. On the list path it records when the quiz
+ * was completed, since her consent predates this visit.
+ */
+function eventProperties(
+  S: QuizState, outcome: Exclude<Outcome, 'D'>, angle: string,
+) {
+  const ad = readAttribution();
+  const utm: Record<string, string> = {};
+  /* Omitted rather than sent empty: an absent utm_source and a blank one mean
+     different things in a report, and only one of them is true. */
+  for (const key of UTM_KEYS) {
+    if (ad[key]) utm[key] = ad[key];
+  }
+
+  return {
+    outcome: OUTCOME_NAME[outcome],
+    outcome_code: outcome,
+    /* The same value under the name the rebuild brief asks for. `outcome`
+       stays, because the live flow already branches on it. */
+    result_route: OUTCOME_NAME[outcome],
+    quiz: 'hf-v3',
+    angle,
+    ...utm,
+    /* Her answers, so an email can say them back to her. They go to Klaviyo
+       with her consent and nowhere else: never into a link, never to an ad
+       pixel. */
+    selected_symptoms: S.sym,
+    primary_symptom: mainConcern(S),
+    /* The v4 name for the same thing, kept for anything already reading it. */
+    main_concern: mainConcern(S),
+    age_band: S.age,
+    cycle_status: S.cycle,
+    ...(S.twelve ? { cycle_12_month_status: S.twelve } : {}),
+    symptom_pattern: S.pattern,
+    tried_actions: S.tried,
+    desired_outcome: S.want,
+    signs: S.sym.length,
+    consent_at: new Date().toISOString(),
+  };
+}
+
+/* ------------------------------------------- the woman already on the list -- */
+
+/**
+ * Sent once, so a reload cannot run JJ's flow twice.
+ *
+ * On the ordinary path the event is sent by a button: she presses it once
+ * and that is that. A woman from the list presses nothing, so it is sent
+ * when her result opens, and a result page can be reloaded, shared with
+ * herself, or reached again with the back button. Without this, each of
+ * those is another HF Quiz Completed and another run of the flow.
+ */
+const SENT_KEY = 'hf_list_event_sent';
+
+const alreadySent = (): boolean => {
+  try { return sessionStorage.getItem(SENT_KEY) === '1'; } catch { return false; }
+};
+const markSent = (): void => {
+  try { sessionStorage.setItem(SENT_KEY, '1'); } catch { /* private browsing */ }
+};
+
+/**
+ * The quiz-completed event for a woman who arrived from JJ's own list.
+ *
+ * SHE IS IDENTIFIED BY PROFILE ID, not by an address. Klaviyo takes
+ * `profile.data.id` for a profile that already exists, so nothing here needs
+ * her email, nothing asks her for one, and no second profile can be created
+ * by a typo in an address she already gave JJ.
+ *
+ * NO CONSENT BOX, AND NO SUBSCRIPTION CALL. She agreed to hear from JJ when
+ * she joined the list; this records what she did on an existing profile
+ * rather than enrolling her in anything. submitLead's consent refusal is for
+ * a stranger typing her address into our form, which is a different act.
+ *
+ * WITHOUT AN ID, NOTHING IS SENT AND NOTHING FAILS. skip_email=1 on its own
+ * is the test mode: the quiz runs end to end with no recipient. Sending an
+ * event with no one attached to it would create the junk profile this whole
+ * path exists to avoid.
+ */
+export async function submitListLead(
+  S: QuizState, outcome: Outcome, angle: string,
+  profileId: string | null,
+): Promise<{ ok: boolean; delivered: boolean }> {
+  /* No recipient: the test mode. Not an error, and not a reason to stop. */
+  if (!profileId) return { ok: true, delivered: false };
+
+  /* The doctor route is an exit, here as everywhere: she is shown no offer
+     and does not enter a flow that will go on to sell her a supplement. */
+  if (outcome === 'D') return { ok: true, delivered: false };
+
+  if (REVIEW) return { ok: true, delivered: false };
+  if (alreadySent()) return { ok: true, delivered: false };
+
+  markSent();
+
+  const body = {
+    data: {
+      type: 'event',
+      attributes: {
+        /* D is refused above, so the narrowing is a fact rather than a cast. */
+        properties: eventProperties(S, outcome as Exclude<Outcome, 'D'>, angle),
+        metric: {
+          data: { type: 'metric', attributes: { name: KLAVIYO_METRIC } },
+        },
+        profile: {
+          data: { type: 'profile', id: profileId },
+        },
+      },
+    },
+  };
+
+  try {
+    const res = await fetch(`${KLAVIYO_EVENTS}?company_id=${KLAVIYO_PUBLIC_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', revision: KLAVIYO_REVISION },
+      body: JSON.stringify(body),
+    });
+    return { ok: true, delivered: res.ok };
+  } catch {
+    /* Never block her from her result because a marketing endpoint is down. */
+    return { ok: true, delivered: false };
+  }
+}
+
 export async function submitLead(
   S: QuizState, outcome: Outcome, angle: string,
   /* The list to subscribe her to. Defaults to the one configured above; a
@@ -139,45 +285,11 @@ export async function submitLead(
   /* The review copy is for looking at, not for collecting. Nothing is sent. */
   if (REVIEW) return { ok: true, delivered: false };
 
-  const ad = readAttribution();
-  const utm: Record<string, string> = {};
-  /* Omitted rather than sent empty: an absent utm_source and a blank one mean
-     different things in a report, and only one of them is true. */
-  for (const key of UTM_KEYS) {
-    if (ad[key]) utm[key] = ad[key];
-  }
-
-  const consentAt = new Date().toISOString();
-
   const body = {
     data: {
       type: 'event',
       attributes: {
-        properties: {
-          outcome: OUTCOME_NAME[outcome],
-          outcome_code: outcome,
-          /* The same value under the name the rebuild brief asks for. `outcome`
-             stays, because the live flow already branches on it. */
-          result_route: OUTCOME_NAME[outcome],
-          quiz: 'hf-v3',
-          angle,
-          ...utm,
-          /* Her answers, so an email can say them back to her. They go to
-             Klaviyo with her consent and nowhere else: never into a link,
-             never to an ad pixel. */
-          selected_symptoms: S.sym,
-          primary_symptom: mainConcern(S),
-          /* The v4 name for the same thing, kept for anything already reading it. */
-          main_concern: mainConcern(S),
-          age_band: S.age,
-          cycle_status: S.cycle,
-          ...(S.twelve ? { cycle_12_month_status: S.twelve } : {}),
-          symptom_pattern: S.pattern,
-          tried_actions: S.tried,
-          desired_outcome: S.want,
-          signs: S.sym.length,
-          consent_at: consentAt,
-        },
+        properties: eventProperties(S, outcome as Exclude<Outcome, 'D'>, angle),
         metric: {
           data: { type: 'metric', attributes: { name: KLAVIYO_METRIC } },
         },
