@@ -99,11 +99,11 @@ export function KitOffer({ outcome, angle }: Props) {
      this gives the second render that rebuilds them. See useHydrated.ts. */
   const hydrated = useHydrated();
   const kit = useMemo(
-    () => kitHref(outcome, angle),
+    () => hydrated ? kitHref(outcome, angle) : undefined,
     [outcome, angle, hydrated],
   );
   const sub = useMemo(
-    () => shopUrl(SHOP_BASE, outcome, angle, 'subscribe'),
+    () => hydrated ? shopUrl(SHOP_BASE, outcome, angle, 'subscribe') : undefined,
     [outcome, angle, hydrated],
   );
 

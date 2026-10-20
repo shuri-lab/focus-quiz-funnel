@@ -94,7 +94,7 @@ export function R2() {
      server has no sessionStorage, so this link was being served with her
      attribution missing and never rebuilt. */
   const hydrated = useHydrated();
-  const href = useMemo(() => kitHref(outcome, angle.slug), [outcome, angle.slug, hydrated]);
+  const href = useMemo(() => hydrated ? kitHref(outcome, angle.slug) : undefined, [outcome, angle.slug, hydrated]);
 
   /* Her two symptom cards and the tracker, which is always the third. Split
      rather than re-derived, so the one source of truth stays threeCards(). */
