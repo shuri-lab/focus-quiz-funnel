@@ -13,4 +13,4 @@
 
 - Keep PostHog behind the shared analytics module and load its browser SDK lazily; this preserves server-safe imports and one tracking boundary.
 
-- Cart links on the Kit screen rebuild after hydration through the shared useHydrated hook; this lets browser-captured attribution reach Shopify after server rendering.
+- Cart links on the Kit screen omit href until hydration and rebuild through the shared useHydrated hook after session capture; this ensures React updates server-rendered links with browser attribution.
