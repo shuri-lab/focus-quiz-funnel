@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { captureAttribution, captureQuizLanding } from './analytics';
+import { captureListLink } from './listLink';
 
 /**
  * False on the server and on the first client render, true immediately after.
@@ -22,6 +24,13 @@ import { useEffect, useState } from 'react';
  */
 export function useHydrated(): boolean {
   const [hydrated, setHydrated] = useState(false);
-  useEffect(() => { setHydrated(true); }, []);
+  useEffect(() => {
+    // Router preloading can evaluate analytics before the arrival query exists.
+    // Capture synchronously before rebuilding links, not in a parent effect.
+    captureListLink();
+    captureAttribution();
+    captureQuizLanding();
+    setHydrated(true);
+  }, []);
   return hydrated;
 }
