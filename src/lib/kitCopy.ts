@@ -152,8 +152,8 @@ export const KIT_FAQ: [string, string][] = [
 /* ------------------------------------------------------------- the closer -- */
 
 /* The button is the brief's. The heading is a PLACEHOLDER. */
-export const CLOSE_HEAD = 'Your next 60 days can start today.';
-export const CLOSE_CTA = 'START MY 60 DAYS';
+export const CLOSE_HEAD = 'Your first bottle can be on its way today.';
+export const CLOSE_CTA = 'Get Hormone Focus';
 
 /* ============================================================ THE REBUILD ==
  *
@@ -182,11 +182,30 @@ export const CLOSE_CTA = 'START MY 60 DAYS';
 /* ------------------------------------------------------------- the hero -- */
 
 /** Her stage, carried over from the result page she just read. */
+/*
+ * THE PAGE SELLS ONE BOTTLE, SO IT STOPPED CALLING ITSELF A PLAN.
+ * 22 October: the kit is off this page, and with it went the guide, the
+ * recipes and the tracker. Every line that promised a plan went with them.
+ * The eyebrow labels her result instead.
+ */
 export const HERO_EYEBROW: Record<'A' | 'B' | 'C' | 'E', string> = {
-  A: 'Your 60-day plan',
-  B: 'Your perimenopause plan',
-  C: 'Your menopause plan',
-  E: 'Your early menopause plan',
+  A: 'Your result · Hormonal imbalance',
+  B: 'Your result · Perimenopause',
+  C: 'Your result · Menopause',
+  E: 'Your result · Early menopause',
+};
+
+/**
+ * What the product is, in one sentence, by the stage she is in.
+ *
+ * It replaces "One simple plan for your hormones", which described something
+ * this page no longer sells. !! PENDING JJ SIGN-OFF !!
+ */
+export const HERO_SUB_BY_STAGE: Record<'A' | 'B' | 'C' | 'E', string> = {
+  A: 'Hormone Focus is a daily supplement for women whose hormones are changing. Two capsules a day.',
+  B: 'Hormone Focus is a daily supplement for women in perimenopause. Two capsules a day.',
+  C: 'Hormone Focus is a daily supplement for women in menopause. Two capsules a day.',
+  E: 'Hormone Focus is a daily supplement for women in early menopause. Two capsules a day.',
 };
 
 /**
@@ -233,26 +252,112 @@ export const HERO_HEAD_DEFAULT = 'Feel like YOU again.';
  * that is the whole of what she actually has to do, and closes on JJ's own
  * line from the bottom of the page.
  */
+/*
+ * TIGHTENED 20 October, when the plan moved directly under the hero.
+ *
+ * It used to carry the three things she would do, which was the right job
+ * for a hero that had a price under it. The three steps are now the next
+ * thing she reads, in full, so saying them here first was the same sentence
+ * twice. What the hero keeps is the framing.
+ */
 export const HERO_SUB =
-  'Two capsules a day, meals that keep you full, and a tracker that shows you '
-  + 'what is changing. One plan for your hormones, not one more thing to try.';
+  'One simple plan for your hormones. Not one more thing to try.';
 
 /** Over the logo rail. JJ's own press, and never the supplement's. */
 export const PRESS_EYEBROW = 'As seen in';
 
-export const HERO_CTA = 'START MY 60 DAYS';
+/*
+ * "60 DAYS" CAME OFF THE BUTTONS, 22 October.
+ *
+ * The kit was sixty days. What this page sells now is one bottle, which is
+ * thirty, so a button reading START MY 60 DAYS promised a length the
+ * purchase does not have. !! PENDING JJ SIGN-OFF !!
+ */
+export const HERO_CTA = 'Get Hormone Focus';
 
-/** Directly under the button, where it does the most good. */
-export const HERO_RISK = '60-day money-back guarantee · Free shipping · Ships today';
+/**
+ * Directly under the button, where it does the most good.
+ *
+ * "FREE SHIPPING" CAME OFF, 22 October, and it had to. This line sat under
+ * the hero while the page led with the kit, whose link carries
+ * HF60FREESHIP. The bottle's link carries the 10% code instead, Shopify
+ * takes one discount parameter, and no free-shipping threshold is published
+ * on the store. Leaving the words there would have promised something the
+ * checkout does not give her.
+ */
+export const HERO_RISK = '60-day money-back guarantee · 10% off your first bottle · Ships today';
 
 /* ------------------------------------------------------------ the offer -- */
 
-/** The benefit, rather than the word "pricing". */
-export const OFFER_HEAD = 'Everything you need for your 60 days, in one kit.';
+/*
+ * THE OFFER BLOCK NOW LEADS WITH ONE BOTTLE, 22 October 2026.
+ *
+ * David's call: put a smaller, less committing first purchase in front of
+ * cold traffic. The kit is off this page; /offer and /plan still sell it and
+ * the product is untouched in the store.
+ *
+ * !! PENDING JJ SIGN-OFF !! for the three lines below that are new.
+ *
+ * THE HEADING CHANGED BECAUSE IT HAD TO. It read "Everything you need for
+ * your 60 days, in one kit", and the kit is the one thing this block no
+ * longer sells.
+ */
+export const OFFER_HEAD = 'Start with one bottle of Hormone Focus.';
+
+/**
+ * On the lead card, where KIT_BADGE used to say BESTSELLER.
+ *
+ * NOT "BESTSELLER" MOVED ACROSS. That word was earned by the kit, and
+ * hanging it on the bottle would be a claim about sales nobody has checked.
+ * This says what the card is for and asserts nothing.
+ */
+export const SINGLE_BADGE = 'START HERE';
+
+export const SINGLE_NAME = '30-Day Supply';
+export const SINGLE_ONCE = 'One-time purchase. No subscription.';
+
+/**
+ * The discount, said the way the checkout says it.
+ *
+ * VERIFIED 22 October: Subtotal $49.99, order discount JJTEN -$4.99, total
+ * $45.00. The code is applied by the link, so she does not type anything,
+ * and the page says "applied at checkout" rather than "use code JJTEN"
+ * because there is nothing for her to use.
+ *
+ * NOTHING HERE SAYS FREE SHIPPING, and that is deliberate. Shopify takes one
+ * discount parameter: the bottle carries the 10% code, so it cannot also
+ * carry HF60FREESHIP, and no free-shipping threshold is published on the
+ * store. Shipping is calculated at checkout and the page does not pretend
+ * otherwise.
+ */
+export const SINGLE_DISCOUNT_NOTE = '10% off applied at checkout';
+
+/** Over the struck price on the lead card, where the kit said "Total value". */
+export const SINGLE_WAS_LABEL = 'Usually';
+export const SINGLE_CTA = 'Get my first bottle';
 
 /** The one alternative, kept quiet under the kit. */
-export const SUB_ALT_LEAD = 'Prefer to start month to month?';
+export const SUB_ALT_LEAD = 'Or subscribe and save more:';
 export const SUB_ALT_NAME = 'Hormone Focus subscription';
+
+/* ----------------------------------------------------- who JJ is -------- */
+
+/**
+ * The lead-in to the proof, for a woman who has never heard of her.
+ *
+ * COLD TRAFFIC ONLY. A woman arriving from JJ's own list already knows who
+ * she is, and being introduced to her would read as a page that has not
+ * noticed who it is talking to. offer.tsx shows this only when skipEmail is
+ * false, which is the same flag the email screen is stepped over on.
+ *
+ * !! PENDING JJ SIGN-OFF !! Both sentences are about her rather than about
+ * the supplement, which is why they carry no claim: the bestseller is a
+ * fact, and the following is attributed to her approach and not to a result
+ * anybody got.
+ */
+export const TRUST_LEAD =
+  'You may not know JJ Smith yet. She is a New York Times bestselling author, '
+  + 'and millions of women have followed her approach.';
 
 /* -------------------------------------------------------- the mechanism -- */
 
@@ -296,4 +401,70 @@ export const PLAN_STEP_3 = 'Mark the tracker.';
  * lines and makes the bar taller than the button it exists to serve. The day
  * rate is the half that does the work, so the day rate is what stays.
  */
-export const STICKY_CTA = 'Start my 60 days';
+export const STICKY_CTA = 'Get Hormone Focus';
+
+/* ================================ THE SINGLE-BOTTLE PAGE, 22 October 2026 ==
+ *
+ * !! PENDING JJ SIGN-OFF !! for everything new below.
+ *
+ * THE KIT IS GONE FROM THIS PAGE and so is every word that depended on it:
+ * the three-step plan, "Why 60 days", JJ's note about the Kit, "the
+ * supplement in the kit", and the plan framing in the hero. What is left
+ * describes one bottle of Hormone Focus and nothing else.
+ *
+ * "60-day money-back guarantee" STAYS, and that is not an oversight. It is
+ * the store's guarantee, it is named in the brief's own sections, and it is
+ * the one place sixty days is a fact about the refund window rather than a
+ * claim about a plan she is not buying.
+ */
+
+/* -------------------------------------------------------- review teaser -- */
+
+export const TEASER_HEAD = 'What women say about it';
+
+/* ---------------------------------------------------------- why it works -- */
+
+/** Her own words, said back, by the symptom she named. */
+export const WHY_OPENER: Record<SymptomId, string> = {
+  sleep: 'You told us your sleep breaks at night.',
+  weight: 'You told us the weight is not shifting the way it used to.',
+  energy: 'You told us your energy is low.',
+  sweats: 'You told us the heat comes on, day and night.',
+  bloat: 'You told us you feel bloated.',
+  mood: 'You told us your mood and your focus are not what they were.',
+};
+
+/** Why that happens, by the stage her answers point to. */
+export const WHY_STAGE: Record<'A' | 'B' | 'C' | 'E', string> = {
+  A: 'When your hormones stop keeping their usual rhythm, changes like that show up in more than one place at once.',
+  B: 'In perimenopause your hormones get less steady, which is why that happens even when nothing else changed.',
+  C: 'After your periods stop your body runs on less estrogen, which is why that happens even when nothing else changed.',
+  E: 'In early menopause your body runs on less estrogen sooner than most women, which is why that happens even when nothing else changed.',
+};
+
+/** The one thing the product is said to do. The asterisk is the disclaimer. */
+export const WHY_PRODUCT =
+  'Hormone Focus supports healthy hormone balance, so your body has the '
+  + 'support it needs.*';
+
+/* ---------------------------------------------------------- how to take -- */
+
+/*
+ * DOSAGE AND NOTHING ELSE.
+ *
+ * This replaced a three-step plan whose step two told her to fix her own
+ * sleep and meals. On a page selling a supplement that reads as the product
+ * admitting it is not the thing that helps, and she did not buy a diet.
+ */
+export const HOW_HEAD = 'How to take it';
+export const HOW_BODY =
+  'Two capsules a day, with a meal and a glass of water. That is the whole '
+  + 'routine. Take it every day and give it time.';
+
+/* ------------------------------------------------------- the offer card -- */
+
+export const OFFER_CARD_HEAD = '30-Day Supply';
+export const OFFER_CARD_SUB = 'One bottle of Hormone Focus, 60 capsules, two a day.';
+
+/** Under the two options, where the risk comes off. */
+export const OFFER_ONCE_NOTE = '10% off applied at checkout';
