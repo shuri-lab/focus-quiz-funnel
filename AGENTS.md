@@ -15,3 +15,4 @@
 
 - Cart links on the Kit screen omit href until hydration and rebuild through the shared useHydrated hook after session capture; this ensures React updates server-rendered links with browser attribution.
 - Bottle and kit quiz offers share one screen with explicit variants; only the bottle belongs to the normal flow, while the kit remains directly addressable until its fulfilment is available.
+- Render the quiz inside TanStack ClientOnly at both entry routes because saved answers and list-link state are browser-owned and cannot match server-rendered quiz results.
