@@ -1,0 +1,119 @@
+import { expect, type Page } from '@playwright/test';
+
+/** Nothing may ever stick out sideways. This is the whole mobile contract. */
+export async function expectNoHorizontalOverflow(page: Page, where: string) {
+  const offenders = await page.evaluate(() => {
+    const doc = document.documentElement;
+    const over = doc.scrollWidth - doc.clientWidth;
+    if (over <= 1) return [];
+    const out: string[] = [];
+    for (const el of Array.from(document.querySelectorAll('*'))) {
+      const b = el.getBoundingClientRect();
+      if (b.width > 0 && (b.right > doc.clientWidth + 1 || b.left < -1)) {
+        out.push(`${el.tagName.toLowerCase()}.${(el.className || '').toString().slice(0, 40)}`);
+      }
+    }
+    return out.slice(0, 5);
+  });
+  expect(offenders, `horizontal overflow on ${where}`).toEqual([]);
+}
+
+/**
+ * Anything you tap has to be big enough to tap.
+ *
+ * Inline links in prose are exempt, and so is anything marked data-inline: a
+ * control that sits inside a sentence, like the Read more inside a customer's
+ * quote, is prose with a button's semantics. It is built as a button because
+ * that is what a screen reader needs, not because it is a call to action.
+ */
+export async function expectTapTargets(page: Page, where: string) {
+  const small = await page.evaluate(() => {
+    const out: string[] = [];
+    for (const el of Array.from(document.querySelectorAll('button, a.cta, input'))) {
+      const b = el.getBoundingClientRect();
+      if (b.width === 0 || b.height === 0 || el.hasAttribute('hidden')) continue;
+      if (el.hasAttribute('data-inline')) continue;
+      if (b.height < 44 || b.width < 44) {
+        out.push(`${el.tagName.toLowerCase()} ${Math.round(b.width)}x${Math.round(b.height)} "${(el.textContent || '').trim().slice(0, 24)}"`);
+      }
+    }
+    return out;
+  });
+  expect(small, `tap targets under 44px on ${where}`).toEqual([]);
+}
+
+/**
+ * No test may reach Klaviyo.
+ *
+ * The walks tick the consent box and submit the gate, and the gate posts a
+ * real event to JJ's account with the public key. Left alone, every run adds
+ * example.com profiles to the quiz flow and to whatever report counts it.
+ * The request is answered here instead, with the 202 Klaviyo would give.
+ */
+export async function blockKlaviyo(page: Page) {
+  await page.route('**/a.klaviyo.com/**', (r) => r.fulfill({ status: 202, body: '' }));
+}
+
+export async function startQuiz(page: Page, route = '/quiz') {
+  await blockKlaviyo(page);
+  await page.goto(route);
+  await page.evaluate(() => sessionStorage.clear());
+  await page.goto(route);
+  await page.waitForTimeout(250);
+}
+
+export const heading = (page: Page) => page.locator('[data-screen-heading]');
+
+/**
+ * Click something, then wait for the screen to actually change before doing
+ * anything else. Single-choice answers advance on a timer, so a test that
+ * clicks straight through races the funnel and fails for the wrong reason.
+ */
+export async function answerAndWait(page: Page, click: () => Promise<void>, nextHeading: RegExp) {
+  await click();
+  await expect(heading(page)).toHaveText(nextHeading, { timeout: 15_000 });
+}
+
+export const pickOption = (page: Page, i: number) => () => page.locator('.opt').nth(i).click();
+export const pressPrimary = (page: Page) => () => page.locator('.actionBar .cta').first().click();
+export const pressSecondary = (page: Page) => () => page.locator('.actionBar .cta').nth(1).click();
+
+/**
+ * The three screens between her result and the price, walked.
+ *
+ * ADDED 29 October 2026 with the screens themselves. Before them, one click on
+ * the result page's button landed on the offer; now it lands on the first of
+ * three. Every walk that ends at the offer calls this, so the day a fourth
+ * screen is added or one is dropped, it is one edit here and not six.
+ *
+ * It starts on `cause`, which is where the result page's button leaves her,
+ * and it leaves her on the offer page. Each heading is asserted on the way
+ * through, so a screen that silently stops rendering fails here rather than
+ * surfacing as a confusing timeout on the offer page.
+ */
+/**
+ * The `cause` screen's headline, which depends on her stage.
+ *
+ * SPLIT 3 November 2026. A and B still make plenty of estrogen and read about
+ * it not clearing; C and E run on less and read about it not being broken
+ * down. Walks say which they are, so a walk that silently started reading the
+ * wrong one fails here rather than passing on a half-match.
+ */
+export const CAUSE_HEADS = {
+  clear: 'The real problem is estrogen that is not clearing.',
+  breakdown: 'Your body is not breaking estrogen down like it used to.',
+} as const;
+
+export async function throughNurture(
+  page: Page,
+  group: keyof typeof CAUSE_HEADS = 'clear',
+) {
+  for (const h of [
+    CAUSE_HEADS[group],
+    'Three simple things. That is the whole plan.',
+    'Meet Hormone Focus.',
+  ]) {
+    await expect(heading(page), `the nurture screen reading "${h}"`).toHaveText(h);
+    await page.locator('.actionBar .cta').click();
+  }
+}
