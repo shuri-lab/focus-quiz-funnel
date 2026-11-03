@@ -1,4 +1,4 @@
-import { createFileRoute, useParams } from "@tanstack/react-router";
+import { ClientOnly, createFileRoute, useParams } from "@tanstack/react-router";
 import { Navigate } from "@/lib/rr";
 import { Quiz } from "@/quiz/Quiz";
 import { ANGLES } from "@/lib/angles";
@@ -30,5 +30,5 @@ function SlugQuiz() {
   const known = ANGLES.some((a) => a.slug && a.slug === slug);
   if (!known) return <Navigate to="/" replace />;
   if (!_splat) return <Navigate to={`/${slug}/quiz/${STEP_SLUG[FIRST_STEP]}`} replace />;
-  return <Quiz />;
+  return <ClientOnly><Quiz /></ClientOnly>;
 }

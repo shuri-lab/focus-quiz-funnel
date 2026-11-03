@@ -217,12 +217,35 @@ export function stateKey(S: QuizState): Outcome {
 export type ScreenId =
   | 'q1' | 'q2' | 'q3' | 'q4' | 'q4b' | 'q5' | 'q6' | 'q7'
   | 'load' | 'gate'
-  | 'r1' | 'r2' | 'rDoc';
+  | 'r1' | 'cause' | 'plan' | 'meet' | 'r2' | 'rDoc'
+  /**
+   * THE KIT OFFER, KEPT OUT OF THE FLOW. 2 November 2026.
+   *
+   * The main walk ends on r2, which sells one bottle. The kit page is the
+   * same screen at variant='kit' and lives at its own address so it is ready
+   * to A/B the day the kit has a Shopify variant of its own and somebody to
+   * fulfil its three guides.
+   *
+   * DELIBERATELY ABSENT from FLOW, REVEAL and AFTER_CYCLE: it is reachable
+   * by its URL and is never walked to, never counted in the progress bar,
+   * and never reached by next() or back().
+   */
+  | 'offerKit';
 
+/* THREE SCREENS BETWEEN THE RESULT AND THE OFFER, 29 October 2026.
+ *
+ * She finishes the quiz PROBLEM-AWARE: she knows what her answers point to and
+ * nothing else. The offer asked her to buy from there, which is a long way to
+ * jump. `cause` tells her what is behind it, `plan` tells her what to do, and
+ * `meet` introduces the product as step one of that plan. Solution-aware, then
+ * product-aware, and only then the price.
+ *
+ * THEY ARE REVEAL STEPS, so the segmented bar keeps filling across all five
+ * rather than stopping at the result. */
 export const FLOW: ScreenId[] = [
   'q1', 'q2', 'q3', 'q4', 'q4b', 'q5', 'q6', 'q7',
   'load', 'gate',
-  'r1', 'r2', 'rDoc',
+  'r1', 'cause', 'plan', 'meet', 'r2', 'rDoc',
 ];
 
 /** The seven she is told about. */
@@ -239,11 +262,13 @@ export const QUESTION_NUMBER: Partial<Record<ScreenId, number>> = {
   q1: 1, q2: 2, q3: 3, q4: 4, q4b: 4, q5: 5, q6: 6, q7: 7,
 };
 
-/** The two result pages. */
-export const REVEAL: ScreenId[] = ['r1', 'r2'];
+/** The five result pages: her result, the three that earn the offer, the offer. */
+export const REVEAL: ScreenId[] = ['r1', 'cause', 'plan', 'meet', 'r2'];
 
 /** Everything between the cycle questions and rDoc. A doctor-route state sees none of it. */
-const AFTER_CYCLE: ScreenId[] = ['q5', 'q6', 'q7', 'load', 'gate', 'r1', 'r2'];
+const AFTER_CYCLE: ScreenId[] = [
+  'q5', 'q6', 'q7', 'load', 'gate', 'r1', 'cause', 'plan', 'meet', 'r2',
+];
 
 /**
  * Is docReason() settled yet? It needs her age and her cycle answer, and the
@@ -288,6 +313,10 @@ export function shouldSkip(S: QuizState, id: ScreenId): boolean {
   if (doctorExit(S) && AFTER_CYCLE.includes(id)) return true;
   if (id === 'rDoc') return stateKey(S) !== 'D';
   if (id === 'r2') return !seesOffer(S);
+  /* THE SAME RULE AS THE OFFER, because all three lead to it. A woman the
+     quiz sends to her doctor must not be walked through "here is what to do
+     about it" and a product introduction on the way to nothing. */
+  if (id === 'cause' || id === 'plan' || id === 'meet') return !seesOffer(S);
   /* THE EMAIL SCREEN, STEPPED OVER FOR A WOMAN ALREADY ON THE LIST. Last,
      so every refusal above it still wins: the doctor route still exits
      before the gate whether or not she arrived from an email. */
@@ -297,6 +326,10 @@ export function shouldSkip(S: QuizState, id: ScreenId): boolean {
 
 /** The next screen after `from`, skipping whatever this state skips. */
 export function nextId(S: QuizState, from: ScreenId): ScreenId | undefined {
+  /* A SCREEN THAT IS NOT IN THE FLOW HAS NO NEXT. Without this, indexOf
+     returns -1, the +1 below makes it 0, and "forward" from an off-flow
+     address is the first question of the quiz. */
+  if (!FLOW.includes(from)) return undefined;
   let i = FLOW.indexOf(from) + 1;
   while (i < FLOW.length && shouldSkip(S, FLOW[i])) i++;
   return FLOW[i];
@@ -304,6 +337,7 @@ export function nextId(S: QuizState, from: ScreenId): ScreenId | undefined {
 
 /** The previous screen before `from`, skipping whatever this state skips. */
 export function prevId(S: QuizState, from: ScreenId): ScreenId | undefined {
+  if (!FLOW.includes(from)) return undefined;
   let i = FLOW.indexOf(from) - 1;
   while (i > 0 && shouldSkip(S, FLOW[i])) i--;
   return i >= 0 ? FLOW[i] : undefined;

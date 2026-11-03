@@ -81,7 +81,10 @@ describe('the funnel speaks the names the dashboard listens for', () => {
 
     expect(propsOf('hf_quiz_completed').quiz_segment).toBe('menopause');
     expect(propsOf('hf_result_viewed').quiz_segment).toBe('menopause');
-    expect(propsOf('hf_offer_viewed').offer_variant).toBe('menopause');
+    /* offer_variant is the OFFER since 2 November, not the outcome: it used
+       to duplicate quiz_segment, and the A/B needs the name for its job. */
+    expect(propsOf('hf_offer_viewed').quiz_segment).toBe('menopause');
+    expect(propsOf('hf_offer_viewed').offer_variant).toBe('bottle');
   });
 });
 
@@ -174,7 +177,7 @@ describe('the event fired on the way out of the page', () => {
 
     const e = sent.find((x) => x.event === 'hf_cta_clicked');
     expect(e, 'the event still fires').toBeTruthy();
-    expect(e!.props).toMatchObject({
+    expect(e?.props).toMatchObject({
       offer_type: 'subscription',
       plan: 'subscribe',
       price: 39.99,
