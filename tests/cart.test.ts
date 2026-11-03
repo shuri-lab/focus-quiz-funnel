@@ -278,7 +278,7 @@ test('the three digital pieces come with the kit and only the kit, and every row
   expect(valueStackFor('single').filter((i) => i.bonus)).toHaveLength(0);
   expect(valueStackFor('subscribe').filter((i) => i.bonus)).toHaveLength(0);
   for (const k of ['single', 'protocol', 'subscribe'] as const) {
-    expect(valueStackFor(k).at(-1)!.what, k).toBe('The 60-Day Happiness Guarantee');
+    expect(valueStackFor(k).at(-1)?.what, k).toBe('The 60-Day Happiness Guarantee');
   }
 });
 
@@ -455,7 +455,7 @@ test('the subscription carries its attribution through Shopify\'s redirect', () 
   const returnTo = u.searchParams.get('return_to');
   expect(returnTo, 'the subscription has no return_to').toBeTruthy();
 
-  const landed = new URLSearchParams(returnTo!.split('?')[1]);
+  const landed = new URLSearchParams(returnTo?.split('?')[1]);
   /* The acquisition. hf_funnel is excluded here because the fixture carries
      one of its own and the quiz sets its own; it is asserted just below. */
   for (const [k, v] of Object.entries(AD)) {
@@ -570,7 +570,7 @@ test('the three bonuses are named, priced and free', () => {
     expect(b.worth, `${b.what} has no price`).toMatch(/^\$\d/);
   }
   /* And the guarantee closes it, as it does on every other stack. */
-  expect(QUIZ_KIT_ROWS.at(-1)!.what).toBe('The 60-Day Happiness Guarantee');
+  expect(QUIZ_KIT_ROWS.at(-1)?.what).toBe('The 60-Day Happiness Guarantee');
 });
 
 test('every button on the kit page still buys the single bottle', () => {
