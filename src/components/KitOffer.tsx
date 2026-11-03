@@ -1,16 +1,27 @@
 import { SHOP_BASE } from '../lib/logic';
 import { useHydrated } from '../lib/useHydrated';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { shopUrl, track } from '../lib/analytics';
 import {
-  MONEY_BACK_BADGE, ONE_MONTH_PRICE, SHOT_KIT_BOTTLE, SINGLE_AFTER_DISCOUNT,
-  SINGLE_DISCOUNT_CODE, SUBSCRIBE_PRICE, money, singleDailyPrice,
+  KIT_BUY_CTA, MONEY_BACK_BADGE, ONE_MONTH_PRICE, QUIZ_KIT_ROWS,
+  QUIZ_KIT_SAVING, QUIZ_KIT_VALUE_TOTAL, SHOT_KIT_BOTTLE, SHOT_KIT_HERO,
+  SINGLE_AFTER_DISCOUNT, SINGLE_DISCOUNT_CODE, SUBSCRIBE_PRICE, money,
+  singleDailyPrice,
 } from '../lib/offer';
+/* FREE_SHIPPING, ONCE_LABEL, ONCE_CADENCE, SUB_LABEL, SUB_CADENCE, SUB_NOTE,
+   SUB_PILL, SUB_OR, SUB_BEST_VALUE, OFFER_ONCE_NOTE and KIT_FREE_LABEL are no
+   longer imported: the row copy moved into kitOptions() in offer.ts when the
+   rows became the shared BuyRows, and "free" is now ValueStack's own word.
+   All of them are still exported and still gated. */
 import {
-  FREE_SHIPPING, HERO_CTA, KIT_EYEBROW, OFFER_CARD_HEAD, OFFER_CARD_SUB,
-  OFFER_ONCE_NOTE, ONCE_CADENCE, ONCE_LABEL, PROMISE_BODY, PROMISE_EYEBROW,
-  PROMISE_FINE, PROMISE_HEAD, SUB_CADENCE, SUB_LABEL, SUB_NOTE, SUB_PILL,
-  TRUST_ITEMS,
+  BOTTLE_CTA, BOTTLE_HERO_HEAD, BOTTLE_ONE_LABEL, BOTTLE_SAVE, BOTTLE_SHOT_ALT,
+  BOTTLE_WHATYOUGET, FREE_SHIPPING, HF_NAME,
+  KIT_BATCH_SHOWN, KIT_EYEBROW, KIT_INCLUDED_HEAD,
+  KIT_ONCE_NOTE, KIT_SAVE_PREFIX, KIT_SHOT_ALT, KIT_STACK_HEAD, KIT_SUB_NOTE,
+  KIT_SUB_PER, KIT_TODAY_LABEL, KIT_TOTAL_LABEL,
+  OFFER_CARD_HEAD, OFFER_CARD_SUB, OFFER_ONCE_NOTE, PROMISE_BODY,
+  PROMISE_EYEBROW, PROMISE_FINE, PROMISE_HEAD, SUB_BEST_VALUE, SUB_LABEL,
+  SUB_PILL, TRUST_ITEMS, bottleBatchLine, kitBatchLine,
 } from '../lib/kitCopy';
 
 /* THE OFFER, AS IT IS ON JJ'S OWN PAGE.
@@ -76,6 +87,13 @@ interface Props {
   /** For begin_checkout. Never put in the cart link. */
   outcome: string;
   angle: string;
+  /**
+   * WHICH OFFER THIS IS. 'kit' is the page preserved at /quiz/offer-kit, with
+   * the three guides and the $146.99 value stack. 'bottle' is what the main
+   * walk ends on: the same two deal boxes, the same cart links, and one line
+   * saying what is in the box instead of a stack with nothing in it.
+   */
+  variant?: 'bottle' | 'kit';
 }
 
 /**
@@ -91,108 +109,248 @@ export function kitHref(outcome: string, angle: string): string {
   return shopUrl(SHOP_BASE, outcome, angle, 'single', SINGLE_DISCOUNT_CODE);
 }
 
-export function KitOffer({ outcome, angle }: Props) {
-  /* TWO OPTIONS AND ONE BUTTON, which is the shape this card had before the
-     kit took it over on 16 October. The radio group, its dot, the cost
-     column and the pill are all the classes that were already styled for it
-     in kit.css; nothing here is a new component.
+function Tick() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 13l4 4L19 7" />
+    </svg>
+  );
+}
+
+/**
+ * THE PRICE, AS A BLOCK RATHER THAN A SENTENCE.
+ *
+ * It was one line reading "$146.99 value, today $45.00". Three facts in the
+ * shape the offer pages use: what it is worth, struck through; what she pays,
+ * large; and what she keeps, in a badge. Shown under the hero, from the same
+ * component as the card below, so the two can never drift apart.
+ */
+export function KitPrice() {
+  return (
+    <div className="kitPrice">
+      <p className="kitPriceWas">
+        <span>{KIT_TOTAL_LABEL}</span> <s>{QUIZ_KIT_VALUE_TOTAL}</s>
+      </p>
+      <p className="kitPriceNow">
+        <span>{KIT_TODAY_LABEL}</span> <b>{money(SINGLE_AFTER_DISCOUNT)}</b>
+      </p>
+      <p className="kitPriceSave">{KIT_SAVE_PREFIX} {QUIZ_KIT_SAVING}</p>
+    </div>
+  );
+}
+
+/**
+ * THE BOTTLE'S PRICE, for the variant that sells one.
+ *
+ * THE SAME THREE FACTS AND NONE OF THE KIT'S. KitPrice above totals a value
+ * stack: $146.99 of things, $45 today, $101.99 kept. There are no bonuses in
+ * this offer, so the only honest version is the bottle's own price struck
+ * down to what she pays and the saving that actually is.
+ */
+export function BottlePrice() {
+  return (
+    <div className="kitPrice">
+      <p className="kitPriceWas">
+        <span>{BOTTLE_ONE_LABEL}</span> <s>{money(ONE_MONTH_PRICE)}</s>
+      </p>
+      <p className="kitPriceNow">
+        <span>{KIT_TODAY_LABEL}</span> <b>{money(SINGLE_AFTER_DISCOUNT)}</b>
+      </p>
+      <p className="kitPriceSave">{BOTTLE_SAVE}</p>
+    </div>
+  );
+}
+
+/**
+ * WHAT SHE GETS, BUILT LIKE JANE'S LANDING PAGE.
+ *
+ * David, 30 October: the shared ValueStack read as a receipt, and the stack
+ * on hormonefocus.jjsmithonline.com reads as an offer. The difference is
+ * structural rather than decorative, so this is modelled on that block:
+ *
+ *   - the things she gets, each with a tick and a price struck through,
+ *   - the three bonuses as cards of their own WITH THE ARTWORK, because a
+ *     bonus she can see is worth more than a bonus she can read,
+ *   - a total, struck, on its own tinted row.
+ *
+ * NOT THE SHARED ValueStack, and deliberately. /offer, /live and /plan have
+ * no artwork for their rows and their above-the-fold budget is measured in a
+ * test; changing how they look was not asked for. The two differ in layout
+ * only, and both read the same StackItem[].
+ */
+function KitStack() {
+  const items = QUIZ_KIT_ROWS.filter((i) => !i.bonus);
+  const bonuses = QUIZ_KIT_ROWS.filter((i) => i.bonus);
+
+  return (
+    <div className="kitVs" data-af="stack">
+      <p className="kitVsH">{KIT_INCLUDED_HEAD}</p>
+
+      <ul className="kitVsList">
+        {items.map((it) => (
+          <li key={it.what}>
+            <span className="kitVsName">
+              {/* THE THING ITSELF WHERE THERE IS A PICTURE OF IT, and the
+                  tick where there is not. The bottle row sat under three
+                  bonus rows that each showed their artwork, which made the
+                  one thing she is actually buying the only line with
+                  nothing to look at. */}
+              {it.img
+                ? <img className="kitVsImg" src={it.img} alt="" width={180} height={180}
+                    loading="lazy" decoding="async" />
+                : <span className="kitVsTick"><Tick /></span>}
+              <span>{it.what}</span>
+            </span>
+            <span className={`kitVsVal${it.worth.startsWith('$') ? ' struck' : ''}`}>
+              {it.worth}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="kitVsBonuses">
+        {bonuses.map((b) => (
+          <div className="kitVsBonus" key={b.what}>
+            {b.img && (
+              <img className="kitVsBonusImg" src={b.img} alt="" width={180} height={180}
+                loading="lazy" decoding="async" />
+            )}
+            <span className="kitVsBonusMain">
+              <span className="kitVsBonusTag">Bonus</span>
+              <span className="kitVsBonusLabel">{b.what}</span>
+            </span>
+            <span className="kitVsVal struck">{b.worth}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="kitVsTotal">
+        <span>{KIT_TOTAL_LABEL}</span>
+        <span className="kitVsTotalV struck">{QUIZ_KIT_VALUE_TOTAL}</span>
+      </div>
+    </div>
+  );
+}
+
+export function KitOffer({ outcome, angle, variant = 'kit' }: Props) {
+  const isKit = variant === 'kit';
+  /* TWO DEAL BOXES, EACH WITH ITS OWN BUTTON, where this was a radio group
+     with one shared button. David's call of 30 October: the radio rows did
+     not read as an offer, and Jane's own page puts each option in a box she
+     can say yes to. Nothing about where they GO changed.
+
+     WHAT THIS COSTS, and it is worth saying out loud: there is no longer a
+     selection to record, so hf_option_selected no longer fires on this page.
+     The event still fires from the offer pages' own rows, and the two buy
+     events it used to sit between, hf_offer_viewed and hf_cta_clicked, are
+     both unchanged.
 
      THE DISCOUNT RIDES ON THE ONE-TIME BOTTLE AND NOTHING ELSE. The
-     subscription already carries its own 20% in Shopify, and stacking a
-     second code on it is neither possible (one discount parameter) nor
-     wanted. */
-  const [pick, setPick] = useState<'single' | 'subscribe'>('single');
+     subscription carries its own 20% in Shopify, and stacking a second code
+     on it is neither possible (one discount parameter) nor wanted. */
 
   /* THE LINKS ARE REBUILT ONCE SHE IS IN A BROWSER. The host renders this on
      a server, where sessionStorage does not exist, so shopUrl() cannot see
      her attribution and every cart link shipped without a utm_*. Reading
      this gives the second render that rebuilds them. See useHydrated.ts. */
   const hydrated = useHydrated();
-  const once = useMemo(() => kitHref(outcome, angle), [outcome, angle, hydrated]);
+  const once = useMemo(() => hydrated ? kitHref(outcome, angle) : undefined, [outcome, angle, hydrated]);
   const sub = useMemo(
-    () => shopUrl(SHOP_BASE, outcome, angle, 'subscribe'),
+    () => hydrated ? shopUrl(SHOP_BASE, outcome, angle, 'subscribe') : undefined,
     [outcome, angle, hydrated],
   );
-
-  const chosen = pick === 'single'
-    ? { href: once, price: SINGLE_AFTER_DISCOUNT, label: `${HERO_CTA} · ${money(SINGLE_AFTER_DISCOUNT)}` }
-    : { href: sub, price: SUBSCRIBE_PRICE, label: `${SUB_LABEL} · ${money(SUBSCRIBE_PRICE)}` };
-
-  const choose = (kind: 'single' | 'subscribe') => {
-    if (kind === pick) return;
-    setPick(kind);
-    track.selectOption(kind, kind === 'single' ? SINGLE_AFTER_DISCOUNT : SUBSCRIBE_PRICE);
-  };
 
   return (
     <div className="kitOffer" id="kit-offer">
       <div className="kitIntro">
         <p className="kitEyebrow">{KIT_EYEBROW}</p>
-        <h2 className="kitH2">{OFFER_CARD_HEAD}</h2>
-        <p className="kitSub">{OFFER_CARD_SUB}</p>
+        <h2 className="kitH2">{isKit ? KIT_STACK_HEAD : BOTTLE_HERO_HEAD}</h2>
       </div>
 
       <div className="kitCard kitLead">
         <div className="kitBottleHead">
-          <img src={SHOT_KIT_BOTTLE} alt="Hormone Focus, one bottle" width={800} height={800}
-            decoding="async" />
+          {isKit
+            ? <img src={SHOT_KIT_HERO} alt={KIT_SHOT_ALT} width={768} height={576}
+                decoding="async" />
+            : <img src={SHOT_KIT_BOTTLE} alt={BOTTLE_SHOT_ALT} width={800} height={800}
+                decoding="async" />}
           <div>
-            <p className="kitBottleName">{OFFER_CARD_HEAD}</p>
-            <p className="kitBottleSupply">{OFFER_CARD_SUB}</p>
+            <p className="kitBottleName">{isKit ? OFFER_CARD_HEAD : HF_NAME}</p>
+            <p className="kitBottleSupply">
+              {isKit ? OFFER_CARD_SUB : BOTTLE_WHATYOUGET}
+            </p>
           </div>
         </div>
 
-        <div className="kitOpts" role="radiogroup" aria-label="How to buy Hormone Focus">
-          <button
-            type="button" role="radio" aria-checked={pick === 'single'}
-            className={`kitOpt${pick === 'single' ? ' on' : ''}`}
-            onClick={() => choose('single')}
-          >
-            <span className="kitDot" aria-hidden="true" />
-            <span className="kitOptName">
-              <b>{ONCE_LABEL}</b>
-              <small>{ONCE_CADENCE}</small>
-              <span className="kitOptExtra">
-                <small className="kitDiscountNote">{OFFER_ONCE_NOTE}</small>
-              </span>
-            </span>
-            <span className="kitOptCost">
-              <b>{money(SINGLE_AFTER_DISCOUNT)}</b>
-              <small><s>{money(ONE_MONTH_PRICE)}</s></small>
-              <small>{singleDailyPrice()} a day</small>
-            </span>
-          </button>
+        {/* THE STACK IS THE KIT'S. There is nothing to total on the bottle:
+            one line above says what is in the box, and inventing a stack for
+            it would be a value claim with no bonuses behind it. */}
+        {isKit && <KitStack />}
 
-          <button
-            type="button" role="radio" aria-checked={pick === 'subscribe'}
-            className={`kitOpt${pick === 'subscribe' ? ' on' : ''}`}
-            onClick={() => choose('subscribe')}
+        {/* THE DEAL. The badge sits on the border, as on her page, so the
+            crossed-out price and the one she pays read as one movement. */}
+        <div className="kitDeal">
+          {/* THE BADGE NAMES THE SAVING, not the old price. David, 2 November:
+              the struck $49.99 was legible only inside this pill, at 12.5px
+              on a purple fill, which is the smallest type on the card for one
+              of the two numbers that matter most. It is in the price row
+              below now, at the size the subscription box sets it, and the
+              badge says what she keeps instead. */}
+          <span className="kitDealBadge">
+            {isKit ? `${KIT_SAVE_PREFIX} ${QUIZ_KIT_SAVING}` : BOTTLE_SAVE}
+          </span>
+          <div className="kitDealNow">
+            <s className="kitWas">{money(ONE_MONTH_PRICE)}</s>
+            <span className="kitDealNum">{money(SINGLE_AFTER_DISCOUNT)}</span>
+          </div>
+          <p className="kitDealNote">
+            {KIT_ONCE_NOTE} &middot; {singleDailyPrice()} a day
+          </p>
+          <a
+            className="cta kitBtn" href={once} data-offer="single"
+            onClick={() => track.checkout(outcome, SINGLE_AFTER_DISCOUNT, 'single', 'kit-main')}
           >
-            <span className="kitDot" aria-hidden="true" />
-            <span className="kitOptName">
-              <b>{SUB_LABEL} <i className="kitPill">{SUB_PILL}</i></b>
-              <small>{SUB_CADENCE}</small>
-              <span className="kitOptExtra">
-                <span className="kitShip"><Truck /> {FREE_SHIPPING}</span>
-                <small>{SUB_NOTE}</small>
-              </span>
-            </span>
-            <span className="kitOptCost">
-              <b>{money(SUBSCRIBE_PRICE)}</b>
-              <small><s>{money(ONE_MONTH_PRICE)}</s></small>
-            </span>
-          </button>
+            {isKit ? KIT_BUY_CTA : BOTTLE_CTA} <Arrow />
+          </a>
+          <p className="kitDealFine">{OFFER_ONCE_NOTE}</p>
         </div>
 
-        {/* Same tab, and no rel: noreferrer would strip the Referer Shopify
-            attributes on. The href and the label both follow the option she
-            picked, so the button can never buy the other one. */}
-        <a
-          className="cta kitBtn" href={chosen.href} data-offer={pick}
-          onClick={() => track.checkout(outcome, chosen.price, pick, 'kit-main')}
-        >
-          {chosen.label} <Arrow />
-        </a>
+        <div className="kitOr"><span>or</span></div>
+
+        <div className="kitDeal2">
+          <span className="kitDeal2Badge">{SUB_BEST_VALUE} &middot; {SUB_PILL}</span>
+          <div className="kitDeal2Now">
+            <s className="kitWas">{money(ONE_MONTH_PRICE)}</s>
+            <span className="kitDeal2Num">{money(SUBSCRIBE_PRICE)}</span>
+            <span className="kitDeal2Per">{KIT_SUB_PER}</span>
+          </div>
+          {/* THE PILL IS BACK. Free shipping is the only thing this option
+              has that the bottle does not, and as words in a grey note it
+              read as small print. */}
+          <p className="kitDeal2Ship">
+            <span className="kitShip"><Truck /> {FREE_SHIPPING}</span>
+          </p>
+          <p className="kitDealNote">{KIT_SUB_NOTE}</p>
+          {/* THE SAME BUTTON AS THE ONE ABOVE, 30 October. It was outlined,
+              which read as the lesser of the two rather than as the other
+              one, and David asked for them to match. */}
+          <a
+            className="cta kitBtn" href={sub} data-offer="subscribe"
+            onClick={() => track.checkout(outcome, SUBSCRIBE_PRICE, 'subscribe', 'kit-sub')}
+          >
+            {SUB_LABEL} <Arrow />
+          </a>
+        </div>
+
+        {/* TRUE, SAID ONCE, NO TIMER. Rendered here rather than through
+            SHOW_BATCH_LINE, which is the global switch and is off for the
+            offer pages at David's request. */}
+        {KIT_BATCH_SHOWN && (
+          <p className="buyBatch kitBatch">
+            {isKit ? kitBatchLine() : bottleBatchLine()}
+          </p>
+        )}
 
         <div className="kitTrust">
           {TRUST_ITEMS.map((t, i) => (
