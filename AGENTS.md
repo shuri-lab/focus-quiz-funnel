@@ -14,3 +14,4 @@
 - Keep PostHog behind the shared analytics module and load its browser SDK lazily; this preserves server-safe imports and one tracking boundary.
 
 - Cart links on the Kit screen omit href until hydration and rebuild through the shared useHydrated hook after session capture; this ensures React updates server-rendered links with browser attribution.
+- Bottle and kit quiz offers share one screen with explicit variants; only the bottle belongs to the normal flow, while the kit remains directly addressable until its fulfilment is available.

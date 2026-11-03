@@ -5,10 +5,10 @@ import { LIVE_HERO } from "@/lib/offerCopy";
 export const Route = createFileRoute("/live")({
   head: () => ({
     meta: [
-      { title: LIVE_HERO.title },
+      { title: `${LIVE_HERO.title} — Live with JJ Smith` },
       { name: "description", content: LIVE_HERO.description },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: LIVE_HERO.title },
+      { property: "og:title", content: `${LIVE_HERO.title} — Live with JJ Smith` },
       { property: "og:description", content: LIVE_HERO.description },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
