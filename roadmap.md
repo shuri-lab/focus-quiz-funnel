@@ -5,4 +5,5 @@
 - [x] Pull 98cf68f1 — order attribution and Jane’s Meta pixel; 180 tests passed and full quiz verified (live order persistence not tested)
 - [x] Pull 26c72a8e — three explanation screens, bottle/kit variants and clearer original-price display; 196 tests passed, full quiz and list-link skip verified, no runtime warnings (live checkout and order persistence not tested)
 - [x] Pull 09ffbb3e — stage-specific "what is going on" screen with new photo; 201 tests passed (full quiz not re-walked)
+- [x] Pull 2aa28ff5 — welcome offer 25% (HORMONE25OFF, $37.50, was $49.99); 202 tests passed, full quiz walked and buy links checked (live checkout not tested)
 - [ ] Confirm Klaviyo list ID from Moses for subscribing quiz leads
