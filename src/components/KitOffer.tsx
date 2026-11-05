@@ -279,9 +279,9 @@ export function KitOffer({ outcome, angle, variant = 'kit' }: Props) {
      her attribution and every cart link shipped without a utm_*. Reading
      this gives the second render that rebuilds them. See useHydrated.ts. */
   const hydrated = useHydrated();
-  const once = useMemo(() => kitHref(outcome, angle), [outcome, angle, hydrated]);
+  const once = useMemo(() => hydrated ? kitHref(outcome, angle) : undefined, [outcome, angle, hydrated]);
   const sub = useMemo(
-    () => shopUrl(SHOP_BASE, outcome, angle, 'subscribe'),
+    () => (hydrated ? shopUrl(SHOP_BASE, outcome, angle, 'subscribe') : undefined),
     [outcome, angle, hydrated],
   );
 
