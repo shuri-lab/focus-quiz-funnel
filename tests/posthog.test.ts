@@ -177,7 +177,7 @@ describe('the event fired on the way out of the page', () => {
 
     const e = sent.find((x) => x.event === 'hf_cta_clicked');
     expect(e, 'the event still fires').toBeTruthy();
-    expect(e?.props).toMatchObject({
+    expect(e!.props).toMatchObject({
       offer_type: 'subscription',
       plan: 'subscribe',
       price: 39.99,

@@ -19,7 +19,9 @@ import {
 } from '../../components/Proof';
 import { kitProof } from '../../lib/reviews';
 import { REVIEW_COUNT } from '../../lib/reviews';
-import { SINGLE_AFTER_DISCOUNT, money, singleDailyPrice } from '../../lib/offer';
+import {
+  SINGLE_AFTER_DISCOUNT, kitToday, money, singleDailyPrice,
+} from '../../lib/offer';
 import { INGREDIENTS } from '../../lib/offerCopy';
 /* HERO_HEAD, HERO_HEAD_DEFAULT and HERO_SUB_BY_STAGE are no longer imported:
    the hero sells the package now, so its headline and sub are the kit's
@@ -28,20 +30,23 @@ import { INGREDIENTS } from '../../lib/offerCopy';
    kit's closer replaces it. All six are still exported and still gated. */
 import {
   BOTTLE_CTA, BOTTLE_HERO_HEAD, BOTTLE_HERO_SUB, BOTTLE_PLAN_LEAD, BOTTLE_SHOT_ALT,
-  CLOSE_CTA, HERO_CTA, HERO_EYEBROW, HERO_RISK, HF_EYEBROW, HF_HEAD,
-  KIT_CLOSE_HEAD, KIT_FAQ, KIT_FAQ_EYEBROW, KIT_FAQ_HEAD, KIT_HERO_HEAD,
+/* HERO_CTA and STICKY_CTA are no longer imported: those two buttons scroll
+   rather than buy, so they read KIT_SEE_CTA now. Both are still exported
+   and still gated; CLOSE_CTA, which does buy, still says Get my Kit. */
+  CLOSE_CTA, HERO_EYEBROW, HERO_RISK, HF_EYEBROW, HF_HEAD,
+  KIT_CLOSE_HEAD, KIT_FAQ, KIT_FAQ_EYEBROW, KIT_FAQ_HEAD,
   KIT_HERO_SUB, KIT_SHOT_ALT, MECH_EYEBROW, MECH_HEAD,
   PLAN_EYEBROW, PLAN_HEAD, PLAN_STEP_1, PLAN_STEP_1_BODY, PLAN_STEP_2,
   PLAN_STEP_2_BODY, PLAN_STEP_3, PLAN_STEP_3_BODY, PROOF_EYEBROW, PROOF_HEAD,
-  PROOF_MORE_HEAD, PROOF_NOTE, SINGLE_DISCOUNT_NOTE, STICKY_CTA, TEASER_HEAD,
+  PROOF_MORE_HEAD, PROOF_NOTE, SINGLE_DISCOUNT_NOTE, TEASER_HEAD,
   TRUST_LEAD,
-  WHY_OPENER, WHY_PRODUCT, WHY_STAGE,
+  KIT_SEE_CTA, WHY_OPENER, WHY_PRODUCT, WHY_STAGE, kitHeroHead,
 } from '../../lib/kitCopy';
 import {
-  BottlePrice, KitGuarantee, KitOffer, KitPrice, kitHref,
+  BottlePrice, KitCompare, KitGuarantee, KitOffer, KitPrice, kitHref,
 } from '../../components/KitOffer';
 import {
-  SHOT_HOW_IT_WORKS, SHOT_KIT_BOTTLE, SHOT_KIT_HERO, SHOT_STEPS,
+  SHOT_HOW_IT_WORKS, SHOT_KIT_BOTTLE, SHOT_KIT_FULL, SHOT_STEPS,
 } from '../../lib/offer';
 import { MEET_HOW_ALT, PLAN_STEP_ALTS } from '../../lib/nurtureCopy';
 import { track } from '../../lib/analytics';
@@ -125,7 +130,10 @@ export function R2({ variant = 'kit', screen = 'r2' }: {
      server has no sessionStorage, so this link was being served with her
      attribution missing and never rebuilt. */
   const hydrated = useHydrated();
-  const href = useMemo(() => hydrated ? kitHref(outcome, angle.slug) : undefined, [outcome, angle.slug, hydrated]);
+  const href = useMemo(
+    () => hydrated ? kitHref(outcome, angle.slug, variant) : undefined,
+    [outcome, angle.slug, variant, hydrated],
+  );
 
   /* The bar shows wherever the page has no call to action of its own in
      view, and stays off the legal text at the foot.
@@ -191,7 +199,11 @@ export function R2({ variant = 'kit', screen = 'r2' }: {
             she reached the picture. The name is in the headline now. */}
         <p className="kitHeroEyebrow">{HERO_EYEBROW[stageOf(outcome)]}</p>
         <ScreenTitle className="kitHeroH1">
-          {isKit ? KIT_HERO_HEAD : BOTTLE_HERO_HEAD}
+          {/* HER NAME ON THE KIT'S HEADLINE, 6 November. She gave it at the
+              email gate; a woman who came from JJ's list skipped that screen
+              and has none, so the line stands on its own for her. The
+              bottle page is unchanged. */}
+          {isKit ? kitHeroHead(S.name.trim()) : BOTTLE_HERO_HEAD}
         </ScreenTitle>
         <p className="kitHeroSub">{isKit ? KIT_HERO_SUB : BOTTLE_HERO_SUB}</p>
 
@@ -205,8 +217,8 @@ export function R2({ variant = 'kit', screen = 'r2' }: {
         {isKit
           ? (
             <img
-              className="kitHeroShot isKit" src={SHOT_KIT_HERO} alt={KIT_SHOT_ALT}
-              width={768} height={576} decoding="async" fetchPriority="high"
+              className="kitHeroShot isKit" src={SHOT_KIT_FULL} alt={KIT_SHOT_ALT}
+              width={600} height={267} decoding="async" fetchPriority="high"
             />
           )
           : (
@@ -228,10 +240,29 @@ export function R2({ variant = 'kit', screen = 'r2' }: {
         {isKit ? <KitPrice /> : <BottlePrice />}
 
         <button type="button" className="cta kitBtn kitHeroCta" onClick={toOffer}>
-          {isKit ? HERO_CTA : BOTTLE_CTA} &nbsp;&rarr;
+          {/* THIS ONE SCROLLS, IT DOES NOT BUY. See KIT_SEE_CTA. */}
+          {isKit ? KIT_SEE_CTA : BOTTLE_CTA} &nbsp;&rarr;
         </button>
         <p className="kitHeroRisk">{HERO_RISK}</p>
+
       </section>
+
+      {/* -------------------------------------------- 1b. the steal ------
+          A BAND OF ITS OWN, 6 November. It was the last thing inside the
+          hero, directly under the guarantee line, which is where small
+          print goes: two cards and a price comparison read as a footnote to
+          the hero rather than as the argument they are. It has the page's
+          own section tint now, with the band's padding above and below, so
+          it is plainly a section and not the end of the one before it.
+
+          It stays BELOW the hero button for the reason the two anchor
+          sentences it replaced did: above it, it pushes the call to action
+          off the first screen on every in-app viewport. */}
+      {isKit && (
+        <section className="kitBand kitCmpBand">
+          <KitCompare />
+        </section>
+      )}
 
       {/* -------------------------------------- 2. proof, straight away ----
           The brief's order inside this zone: the women, then two of them in
@@ -446,13 +477,20 @@ export function R2({ variant = 'kit', screen = 'r2' }: {
         <div data-proof="closing"><Quote review={proof.closing} long /></div>
         <h2 className="kitH2">{KIT_CLOSE_HEAD}</h2>
         <a
-          className="cta kitBtn" href={href} data-offer="single" data-close
-          onClick={() => track.checkout(outcome, SINGLE_AFTER_DISCOUNT, 'single', 'quiz-kit-close')}
+          className="cta kitBtn" href={href} data-offer={isKit ? 'protocol' : 'single'} data-close
+          onClick={() => track.checkout(
+            outcome,
+            isKit ? kitToday() : SINGLE_AFTER_DISCOUNT,
+            isKit ? 'protocol' : 'single',
+            'quiz-kit-close',
+          )}
         >
           {isKit ? CLOSE_CTA : BOTTLE_CTA} &nbsp;&rarr;
         </a>
         <p className="kitNote">
-          {money(SINGLE_AFTER_DISCOUNT)} · {SINGLE_DISCOUNT_NOTE} · 60-day money-back guarantee
+          {isKit
+            ? `${money(kitToday())} · two bottles plus the plan · 60-day money-back guarantee`
+            : `${money(SINGLE_AFTER_DISCOUNT)} · ${SINGLE_DISCOUNT_NOTE} · 60-day money-back guarantee`}
         </p>
       </section>
 
@@ -471,7 +509,7 @@ export function R2({ variant = 'kit', screen = 'r2' }: {
               decide for her from a bar she half-read. The buy events still
               come from the cards themselves, so nothing double-counts. */}
           <button type="button" className="cta kitBtn" data-sticky onClick={toOffer}>
-            {isKit ? STICKY_CTA : BOTTLE_CTA}
+            {isKit ? KIT_SEE_CTA : BOTTLE_CTA}
           </button>
         </div>
       ), document.body)}

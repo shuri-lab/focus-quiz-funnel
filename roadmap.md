@@ -7,3 +7,4 @@
 - [x] Pull 09ffbb3e — stage-specific "what is going on" screen with new photo; 201 tests passed (full quiz not re-walked)
 - [x] Pull 2aa28ff5 — welcome offer 25% (HORMONE25OFF, $37.50, was $49.99); 202 tests passed, full quiz walked and buy links checked (live checkout not tested)
 - [ ] Confirm Klaviyo list ID from Moses for subscribing quiz leads
+- [x] Pull 3a78d6d — cart links keep storefront=true, offer arms, new plan/transition screens; 221 tests passed, quiz walked to final page

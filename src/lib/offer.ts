@@ -1,3 +1,4 @@
+import { getArm } from './arm';
 /* The commercial numbers, in one place, because some of them are not
    confirmed yet and somebody will have to change them.
  *
@@ -58,10 +59,10 @@ export const PROTOCOL_PER_BOTTLE = PROTOCOL_PRICE / 2;
 /* RENAMED 30 October 2026, David: the kit is "The Feel Like YOU Again Kit"
    and the 60-Day wording comes off its name.
    WHAT KEEPS ITS SIXTY DAYS, because none of it is the kit's name: the
-   60-Day Happiness Guarantee is the refund window and a policy term, The
+   60-Day Guarantee is the refund window and a policy term, The
    60-Day Hormone Fix is the ebook's own title, and PLAN_SHORT below still
    names the TWO-bottle pack on /offer, which really is sixty days of it. */
-export const PLAN_NAME = 'The Feel Like YOU Again Kit';
+export const PLAN_NAME = 'The 60-Day Feel Like You Again Kit';
 export const PLAN_SHORT = 'The 60-Day Kit';
 
 /** The three digital pieces, as one line for a card. */
@@ -157,6 +158,32 @@ export const SINGLE_DISCOUNT_CODE: string | null = 'HORMONE25OFF';
 export const SINGLE_DISCOUNT_PERCENT = 25;
 
 /**
+ * THE KIT'S OWN CODE AND PRICE, 6 November 2026.
+ *
+ * The quiz kit page sold ONE bottle at $37.50 while calling itself a 60-day
+ * kit, which was the longest-standing untruth on it: a 30-day supply cannot
+ * be sixty days of anything. It sells the two-bottle bundle now, which is a
+ * 60-day supply, so every "60-day" on the page is finally a fact.
+ *
+ * ================= KIT47 DOES NOT EXIST IN SHOPIFY YET =================
+ *
+ * David is creating it. Until he does, this page's buttons carry a code the
+ * cart will ignore and the customer is charged the bundle's list price. The
+ * four-row check that settled HORMONE25OFF is the one to run on it:
+ *
+ *   node: load /cart/54330638663791:1?discount=KIT47 and read /cart.js
+ *   expect original 99.98 -> total 47.00, and a made-up code to change
+ *   nothing, or the code is not live.
+ *
+ * $47.00 IS HARDCODED AND SHOPIFY-EXACT, for the same reason
+ * SINGLE_AFTER_DISCOUNT is: Shopify rounds the DISCOUNT, not the total, and
+ * a page that prints a cent under what the cart charges is the one failure
+ * this file exists to prevent. Read it off the cart once KIT47 is live.
+ */
+export const KIT_DISCOUNT_CODE: string | null = 'KIT47';
+export const QUIZ_KIT_AFTER_DISCOUNT = 47.00;
+
+/**
  * What Shopify charges for one bottle at 25% off: $37.50.
  *
  * NOT ARITHMETIC, AND NOT $37.49. A quarter of 49.99 is 12.4975; Shopify
@@ -189,11 +216,28 @@ export const SINGLE_AFTER_DISCOUNT = 37.50;
  * new is only that they are priced, which is what makes a value stack a
  * value stack.
  *
- * WHAT SHOPIFY ACTUALLY SHIPS IS STILL ONE BOTTLE. The kit has no variant of
- * its own yet, so every button on that page still buys SINGLE_VARIANT_ID.
- * The three bonuses are a fulfilment promise this repo cannot keep on its
- * own; see the note on the page itself.
+ * WHAT SHOPIFY SHIPS IS TWO BOTTLES, since 6 November. The buttons carry
+ * PROTOCOL_VARIANT_ID, the bundle that exists in the store, so the 60-day
+ * supply the page promises is the one that arrives.
+ *
+ * THE THREE BONUSES ARE STILL A FULFILMENT PROMISE THIS REPO CANNOT KEEP.
+ * Nothing in the cart delivers the guide, the recipes or the tracker. That
+ * half of the offer is a question for the store.
  */
+/**
+ * JJ'S OWN FIGURE FOR TWO BOTTLES, and it is a cent above the arithmetic.
+ *
+ * Two bottles at $49.99 is $99.98. Her page says $99.99 and totals $196.99,
+ * which is what KIT_VALUE above holds. The quiz uses HER number so the two
+ * doors describe the same offer to the cent: a woman who reads $196.99 on
+ * hormonefocus.jjsmithonline.com and $196.98 here has caught the funnel
+ * contradicting itself over a penny.
+ */
+const KIT_TWO_BOTTLE_WORTH = 99.99;
+
+/** The same figure, for the page that strikes it through. */
+export const KIT_TWO_BOTTLE_VALUE = KIT_TWO_BOTTLE_WORTH;
+
 const BONUS_FIX_WORTH = 49;
 const BONUS_RECIPES_WORTH = 29;
 const BONUS_TRACKER_WORTH = 19;
@@ -206,8 +250,15 @@ const worth = (n: number): string => (Number.isInteger(n) ? `$${n}` : money(n));
    markup. KitRow was that second type and is gone. */
 export const QUIZ_KIT_ROWS: StackItem[] = [
   {
-    what: 'Hormone Focus, 30-day supply', worth: worth(ONE_MONTH_PRICE),
-    img: '/img/kit-bottle-thumb.webp',
+    /* THE BRIEF WROTE THIS WITH AN EM DASH. House style has had none since
+       29 October, so the join is a colon. */
+    what: 'Hormone Focus: 2 bottles, 60-day supply',
+    worth: worth(KIT_TWO_BOTTLE_WORTH),
+    /* THE TWO BOTTLES THEMSELVES, not the kit composite shrunk to 30px.
+       SHOT_TWO has been in public/img all along for the offer cards; this is
+       the same shot as a thumbnail, so the row showing "2 bottles" shows
+       two bottles rather than an unreadable smudge of the whole kit. */
+    img: '/img/kit-two-bottles-thumb.webp',
   },
   {
     what: 'The 60-Day Hormone Fix', worth: worth(BONUS_FIX_WORTH),
@@ -222,7 +273,7 @@ export const QUIZ_KIT_ROWS: StackItem[] = [
     free: true, bonus: true, img: '/img/kit-tracker-thumb.webp',
   },
   {
-    what: 'The 60-Day Happiness Guarantee', worth: 'included',
+    what: 'The 60-Day Guarantee', worth: 'included',
     /* THE SEAL ITSELF, not a tick. David, 30 October: the row carries the
        same badge the guarantee band further down the page carries.
 
@@ -241,10 +292,36 @@ export const QUIZ_KIT_ROWS: StackItem[] = [
  * further up. A test holds it to $146.99 so a deliberate change still has to
  * be a deliberate change.
  */
+/* TWO BOTTLES SINCE 6 November, which is what makes the total $196.99 and
+   puts the quiz and JJ's own page on the same numbers: KIT_VALUE above holds
+   exactly these. */
 const QUIZ_KIT_VALUE_NUM =
-  ONE_MONTH_PRICE + BONUS_FIX_WORTH + BONUS_RECIPES_WORTH + BONUS_TRACKER_WORTH;
+  KIT_TWO_BOTTLE_WORTH + BONUS_FIX_WORTH + BONUS_RECIPES_WORTH + BONUS_TRACKER_WORTH;
 
 export const QUIZ_KIT_VALUE_TOTAL = money(QUIZ_KIT_VALUE_NUM);
+
+/** The two thumbs the one-bottle-versus-kit comparison sets side by side. */
+export const SHOT_BOTTLE_THUMB = '/img/kit-bottle-thumb.webp';
+export const SHOT_KIT_THUMB = '/img/kit-two-bottles-thumb.webp';
+
+/**
+ * THE WHOLE KIT, WITH NO PRICE PRINTED ON IT. 6 November.
+ *
+ * The comparison card showed two bottles, which is not what the card is
+ * arguing: the kit is two bottles AND the plan, the recipes and the tracker,
+ * and that is the half the price is being compared against.
+ *
+ * The composite that shows all five is kit-2bottle-hero.webp, and it has a
+ * starburst reading "$74.99 VALUE / $196.99" printed into the artwork. Two
+ * more prices beside a card that says $47.00 is three prices for one thing,
+ * so this file is that composite with the starburst and the headline painted
+ * out and the rest trimmed to the products. It is a stopgap: when Janey
+ * re-exports the burst at $47.00 this can go back to being a crop of it.
+ */
+export const SHOT_KIT_FULL = '/img/kit-full-thumb.webp';
+
+/** The same total as a number, for the copy that subtracts from it. */
+export const QUIZ_KIT_VALUE_NUM_TOTAL = QUIZ_KIT_VALUE_NUM;
 
 /**
  * What the price block says she keeps: $101.99.
@@ -252,10 +329,12 @@ export const QUIZ_KIT_VALUE_TOTAL = money(QUIZ_KIT_VALUE_NUM);
  * Subtracted rather than typed, for the same reason the total is summed. The
  * badge beside a price is the first thing anybody checks with a calculator.
  */
-export const QUIZ_KIT_SAVING = money(QUIZ_KIT_VALUE_NUM - SINGLE_AFTER_DISCOUNT);
+export const QUIZ_KIT_SAVING = money(QUIZ_KIT_VALUE_NUM - QUIZ_KIT_AFTER_DISCOUNT);
 
 /** The kit shot for the quiz page's hero: the bottle and all three pieces. */
-export const SHOT_KIT_HERO = '/img/kit-60-day-hero.webp';
+/* The two-bottle kit with its three guides, 6 November. The one-bottle
+   composite it replaced is still in public/img. */
+export const SHOT_KIT_HERO = '/img/kit-2bottle-hero.webp';
 
 /* THE NURTURE SCREENS' ARTWORK, SHARED WITH THE OFFER PAGE. 2 November.
  *
@@ -710,10 +789,13 @@ export function cartPath(kind: OfferKind, discount: string | null = null): strin
 
   if (kind === 'protocol') {
     if (PROTOCOL_VARIANT_ID) {
-      const ship = KIT_SHIPPING_CODE
-        ? `&discount=${encodeURIComponent(KIT_SHIPPING_CODE)}`
-        : '';
-      return `/cart/${PROTOCOL_VARIANT_ID}:1?storefront=true${ship}`;
+      /* THE CALLER'S CODE WINS, AND IT COSTS THE FREE SHIPPING. Shopify takes
+         ONE discount parameter, so the quiz kit page's KIT47 goes on instead
+         of HF60FREESHIP, never as well as. /offer, /live and /plan call this
+         with nothing and keep the shipping code exactly as before. */
+      const code = discount ?? KIT_SHIPPING_CODE;
+      const q = code ? `&discount=${encodeURIComponent(code)}` : '';
+      return `/cart/${PROTOCOL_VARIANT_ID}:1?storefront=true${q}`;
     }
     const code = PROTOCOL_DISCOUNT_CODE
       ? `&discount=${encodeURIComponent(PROTOCOL_DISCOUNT_CODE)}`
@@ -730,3 +812,10 @@ export function cartPath(kind: OfferKind, discount: string | null = null): strin
   return `/cart/${SINGLE_VARIANT_ID}:1?storefront=true${code}`;
 }
 
+
+/* THE OFFER SWITCH (see arm.ts). The Kit page's price and code follow her
+   arm: the live $74.99 with free shipping (kit74), or David's proposed $47
+   (kit47). bottle25 never reaches the Kit page. */
+export const kitToday = (): number => (getArm() === 'kit47' ? QUIZ_KIT_AFTER_DISCOUNT : PROTOCOL_PRICE);
+export const kitCode = (): string | null => (getArm() === 'kit47' ? KIT_DISCOUNT_CODE : KIT_SHIPPING_CODE);
+export const isKit47 = (): boolean => getArm() === 'kit47';

@@ -461,8 +461,16 @@ test.describe('the quiz', () => {
     const deal2 = lead.locator('.kitDeal2');
     await expect(deal2.locator('.kitDeal2Num')).toHaveText('$39.99');
     await expect(deal2.locator('.kitWas')).toHaveText('$49.99');
-    await expect(deal2).toContainText(/best value/i);
-    await expect(deal2).toContainText(/20% off/i);
+    /* NOT "BEST VALUE", 5 November. The welcome offer puts the first bottle
+       at $37.50 and this is $39.99, so for the order she is looking at the
+       one-time purchase is the cheaper of the two. A badge claiming
+       otherwise is one she can disprove with the two numbers either side of
+       it. What is true is the price she keeps. */
+    await expect(deal2).toContainText('Lock in $39.99');
+    await expect(deal2, 'the subscription is not the cheaper first order')
+      .not.toContainText(/best value/i);
+    await expect(deal2).toContainText('Every bottle stays $39.99');
+    await expect(deal2).toContainText('$10.00 off every bottle after your first');
     await expect(deal2).toContainText(/pause or cancel anytime/i);
     /* THE SHIPPING PILL IS BACK, 30 October: free shipping is this option's
        one advantage over the bottle and it was reading as small print. */
@@ -538,7 +546,7 @@ test.describe('the quiz', () => {
     await expect(rating.locator('.pfRatingBy img')).toHaveAttribute('alt', 'Okendo');
 
     /* The guarantee, the questions, and the button again. */
-    await expect(page.locator('.kitPromise')).toContainText('60-Day Happiness Guarantee');
+    await expect(page.locator('.kitPromise')).toContainText('60-Day Guarantee');
     /* JJ's own six questions now, at David's request. */
     await expect(page.locator('.kitFaq details')).toHaveCount(6);
     /* The closer buys what the page leads with, which is the bottle now, so
@@ -734,7 +742,7 @@ test.describe('the addresses', () => {
        until the A/B was set up. */
     ['kit', 'Hormone Focus, your daily support'],
     /* And the kit, preserved whole at its own address, off the flow. */
-    ['offer-kit', 'Not just a bottle. The Feel Like YOU Again Kit.'],
+    ['offer-kit', 'Feel like YOU again in 60 days.'],
     ['speak-to-your-doctor', 'Talk to your healthcare professional'],
   ] as const;
 
@@ -950,7 +958,7 @@ test.describe('the kit page', () => {
       expect(bands[offerAt + 1], 'the guarantee is the one directly under it')
         .toBe('kitBand teal');
       await expect(page.locator('.kitBand.teal').locator('.kitPromise'))
-        .toContainText('60-Day Happiness Guarantee');
+        .toContainText('60-Day Guarantee');
     });
 
   test('both rails loop seamlessly, which is arithmetic and not a judgement',
@@ -986,52 +994,40 @@ test.describe('the kit page', () => {
       }
     });
 
-  test('the kit page sells the kit and still checks out as the bottle',
+  test('the kit page sells two bottles, and the cart ships two',
     async ({ page }) => {
-      /* THE KIT PAGE, AT ITS OWN ADDRESS SINCE 2 November. It is off the
-         flow: the walk ends on the one-bottle offer, and this is preserved
-         whole, ready to A/B the day the kit has a Shopify variant and
-         somebody to fulfil its guides.
+      /* THE LONGEST-STANDING UNTRUTH ON THIS PAGE, closed 6 November. It
+         called itself a 60-day kit and put ONE bottle in the cart, which is
+         thirty days of it. It buys the two-bottle bundle now, so every
+         "60-day" on the page is a fact about what arrives.
 
-         THE GAP IT SHIPS WITH, and it is deliberate. The page is the kit:
-         the name, the three bonuses, a $146.99 value stack. The kit has no
-         Shopify variant yet, so every button still buys the single bottle,
-         41200079175791. Which is exactly why it is not in the flow.
-
-         ASSERTED RATHER THAN ONLY WRITTEN DOWN, because the day the kit
-         does get a variant this test is the thing that says which links
-         have to change, and until then it is the thing that stops someone
-         "fixing" the page by pointing it at the two-bottle kit variant,
-         which is a different offer at a different price.
-
-         THE BONUSES ARE A FULFILMENT PROMISE THE CART DOES NOT KEEP. That
-         is a question for the store, not for this file; what this file can
-         do is make sure nobody thinks it is already solved. */
+         ASSERTED AS THE VARIANT, not as the words: the words were right
+         before and the cart was wrong. */
       await page.goto('/quiz/offer-kit');
-      /* SCOPED, because the price block is deliberately in two places since
-         29 October: once under the hero and once in the card. */
-      await expect(page.locator('#kit-offer').getByText('Total value'), "the kit's value stack")
-        .toBeVisible();
-      await expect(page.locator('.kitHero').getByText('Total value'), 'and under the hero')
-        .toBeVisible();
-      await expect(page.locator('#kit-offer').getByText('The 60-Day Hormone Fix'), 'the first bonus')
-        .toBeVisible();
-      await expect(page.locator('a[href*="54330638663791"]'), 'the two-bottle kit variant')
-        .toHaveCount(0);
-      await expect(page.locator('a[href*="41200079175791"]').first(), 'the bottle is the cart')
-        .toBeAttached();
 
-      await page.goto('/offer');
-      await expect(page.locator('a[href*="54330638663791"]').first(), 'the kit still sells there')
-        .toBeAttached();
-      /* And there it is still the full-price bottle: the 10% code is passed
-         by the quiz page alone, which is what keeps these pages apart. */
-      const offerHrefs = await page.locator('a[href*="41200079175791"]').evaluateAll(
-        (as) => as.map((a) => (a as HTMLAnchorElement).href),
-      );
-      for (const h of offerHrefs) {
-        expect(h, 'the quiz code leaked onto /offer').not.toContain('HORMONE25OFF');
-      }
+      const buy = page.locator('#kit-offer a[data-offer]').first();
+      await expect(buy, 'the kit must buy the two-bottle bundle')
+        .toHaveAttribute('href', /cart\/54330638663791:1/);
+      await expect(buy, 'with its own code').toHaveAttribute('href', /discount=KIT47/);
+      await expect(buy, 'and never the single bottle')
+        .not.toHaveAttribute('href', /41200079175791/);
+
+      /* The stack says two bottles and totals JJ's own $196.99. */
+      await expect(page.locator('#kit-offer')).toContainText('2 bottles, 60-day supply');
+      await expect(page.locator('.kitVsTotalV')).toHaveText('$196.99');
+      await expect(page.locator('.kitHero .kitPrice')).toContainText('$47.00');
+      await expect(page.locator('.kitHero .kitPrice')).toContainText('You save $149.99');
+
+      /* AND NO ONE-BOTTLE COPY SURVIVES, apart from the anchor that exists
+         to compare against one: "less than one bottle on its own". */
+      const text = await page.locator('.rise').innerText();
+      const leftovers = (text.match(/[^.\n]*(30-day supply|single bottle)[^.\n]*/gi) ?? []);
+      expect(leftovers, 'one-bottle copy left on a two-bottle page').toEqual([]);
+
+      /* THE THREE BONUSES ARE STILL A PROMISE THE CART DOES NOT KEEP. The
+         bottles ship; the guide, the recipes and the tracker do not. That is
+         a question for the store, and this says nobody has solved it yet. */
+      await expect(page.locator('#kit-offer')).toContainText('The 60-Day Hormone Fix');
     });
 
   test('both buy buttons still carry her ad tags, and never her answers',
@@ -1511,16 +1507,15 @@ test.describe('the two offers', () => {
       /* And forward from the kit page is nowhere: it is not in the sequence,
          so there is no Continue to press. */
       await page.goto('/quiz/offer-kit');
-      await expect(heading(page)).toHaveText('Not just a bottle. The Feel Like YOU Again Kit.');
+      await expect(heading(page)).toHaveText('Feel like YOU again in 60 days.');
       await expect(page.locator('.segbar i.on'), 'the kit page is not a step in the walk')
         .toHaveCount(0);
     });
 
-  test('both offers send her to the same two carts', async ({ page }) => {
-    /* NOTHING ABOUT WHERE THE BUTTONS GO CHANGED when the page split. Both
-       variants buy the single bottle with the code or the subscription without
-       it; the kit's own variant does not exist yet, and the day it does,
-       this is the test that says which links have to move. */
+  test('each offer sends her to its own cart', async ({ page }) => {
+    /* THEY SHARED A CART UNTIL 6 November, when the kit started buying the
+       two-bottle bundle it had always claimed to be. That was the day this
+       test said the links had to move, and they did. */
     for (const slug of ['kit', 'offer-kit']) {
       await page.goto(`/quiz/${slug}`);
       const links = await page.locator('#kit-offer a[href*="shop.jjsmithonline.com"]')
@@ -1529,16 +1524,31 @@ test.describe('the two offers', () => {
           href: (a as HTMLAnchorElement).href,
         })));
 
-      expect(links.map((l) => l.offer), `${slug}: the two deal boxes`)
+      /* THE TWO OFFERS NO LONGER SHARE A CART, since 6 November: the kit
+         buys the two-bottle bundle and the bottle offer buys one bottle,
+         which is the difference between them.
+
+         AND THE KIT IS A ONE TIME BUY, since 6 November. Asking a woman to
+         choose between sixty days of capsules and a subscription, on the
+         screen whose whole argument is that the kit is the better deal, was
+         a second decision in the way of the first. The subscription stays on
+         /quiz/kit, where one bottle a month is the thing being sold. */
+      if (slug === 'offer-kit') {
+        expect(links.map((l) => l.offer), 'the kit offers one thing')
+          .toEqual(['protocol']);
+        expect(links[0].href, 'the kit buys the bundle with its own code')
+          .toMatch(/cart\/54330638663791:1.*discount=KIT47/);
+        continue;
+      }
+
+      expect(links.map((l) => l.offer), 'the bottle page still offers both')
         .toEqual(['single', 'subscribe']);
-      expect(links[0].href, `${slug}: the bottle carries the code`)
+      expect(links[0].href, 'the bottle carries the welcome code')
         .toMatch(/cart\/41200079175791:1.*discount=HORMONE25OFF/);
-      expect(links[1].href, `${slug}: the subscription carries its plan`)
+      expect(links[1].href, 'the subscription carries its plan')
         .toMatch(/cart\/add\?id=54355951845487.*selling_plan=5529010287/);
-      expect(links[1].href, `${slug}: JJTEN must not ride the subscription`)
-        .not.toContain('HORMONE25OFF');
-      await expect(page.locator(`a[href*="54330638663791"]`), `${slug}: the two-bottle variant`)
-        .toHaveCount(0);
+      expect(links[1].href, 'no code may ride the subscription')
+        .not.toMatch(/HORMONE25OFF|KIT47/);
     }
   });
 
@@ -1649,6 +1659,56 @@ test.describe('the nurture artwork, reused on the offer page', () => {
     });
 });
 
+test('the steal is its own section, and carries no second price', async ({ page }) => {
+  /* It was the last thing inside the hero, under the guarantee line, which
+     is where small print goes. David, 6 November: make it a section and put
+     the framing above the cards, because she was meeting two prices and
+     working out what they were for afterwards. */
+  await page.goto('/quiz/offer-kit');
+
+  const band = page.locator('.kitCmpBand');
+  await expect(band, 'the comparison has no band of its own').toHaveCount(1);
+  expect(await band.evaluate((el) => el.closest('.kitHero') !== null),
+    'the comparison is still inside the hero').toBe(false);
+
+  /* A tint of its own, and room around it: a band that looks like the one
+     above it is not a section, whatever the markup says. */
+  const look = await band.evaluate((el) => {
+    const cs = getComputedStyle(el);
+    return {
+      bg: cs.backgroundColor,
+      page: getComputedStyle(document.body).backgroundColor,
+      padTop: parseFloat(cs.paddingTop),
+      padBottom: parseFloat(cs.paddingBottom),
+    };
+  });
+  expect(look.bg, 'the band is the same colour as the page').not.toBe(look.page);
+  expect(look.padTop, 'no air above the section').toBeGreaterThanOrEqual(24);
+  expect(look.padBottom, 'no air below the section').toBeGreaterThanOrEqual(24);
+
+  /* The argument first, the evidence second. */
+  const order = await page.evaluate(() => ({
+    head: document.querySelector('.kitCmpTitle')!.getBoundingClientRect().top,
+    cards: document.querySelector('.kitCmpCards')!.getBoundingClientRect().top,
+    why: document.querySelector('.kitCmpWhy')!.getBoundingClientRect().top,
+  }));
+  expect(order.head, 'the framing is not above the cards').toBeLessThan(order.cards);
+  expect(order.why, 'the small line is not under the cards').toBeGreaterThan(order.cards);
+
+  /* NO ARTWORK WITH A PRICE PRINTED INTO IT. kit-2bottle-hero.webp carries a
+     starburst reading "$74.99 VALUE / $196.99". Beside a card that says
+     $47.00 that is three prices for one thing, and it is baked into the
+     pixels where no test of the text would ever see it. */
+  const shot = await page.locator('.kitCmp.isKit .kitCmpShot').getAttribute('src');
+  expect(shot, 'the kit card shows the whole kit').toBe('/img/kit-full-thumb.webp');
+  expect(shot, 'the card is using the composite with the price burst on it')
+    .not.toContain('kit-2bottle-hero');
+
+  /* And the kit page says nothing about a batch, as of 6 November. */
+  await expect(page.locator('.kitBatch'), 'the kit batch line is back')
+    .toHaveCount(0);
+});
+
 test('both deal boxes strike the old price the same way, and legibly',
   async ({ page }) => {
     /* The struck price lived in the main box's badge at 12.5px on a purple
@@ -1666,9 +1726,17 @@ test('both deal boxes strike the old price the same way, and legibly',
           ruled: getComputedStyle(e, '::after').content !== 'none',
         })),
       );
-      expect(was.length, `${slug}: both boxes show what she is not paying`).toBe(2);
+      /* ONE BOX ON THE KIT PAGE, TWO ON THE BOTTLE PAGE, since 6 November:
+         the kit dropped its subscription, so it has one price to strike. */
+      expect(was.length, `${slug}: the wrong number of struck prices`)
+        .toBe(slug === 'offer-kit' ? 1 : 2);
       for (const w of was) {
-        expect(w.text, `${slug}: the old price`).toBe('$49.99');
+        /* THE KIT STRIKES WHAT THE KIT IS WORTH, not one bottle and not two:
+           the badge above it adds the three guides to the two bottles, so
+           striking $99.99 beside a $196.99 badge was two numbers for the
+           same thing. The bottle offer strikes one bottle. */
+        expect(w.text, `${slug}: the old price`)
+          .toBe(slug === 'offer-kit' ? '$196.99' : '$49.99');
         expect(w.px, `${slug}: ${w.px}px is too small to read`).toBeGreaterThanOrEqual(20);
         expect(w.ruled, `${slug}: no rule through the old price`).toBe(true);
       }
@@ -1822,8 +1890,14 @@ test('the welcome offer says what it is, what it costs and why she has it',
       px: Math.round(parseFloat(getComputedStyle(e).fontSize)),
       ruled: getComputedStyle(e, '::after').content !== 'none',
     }));
-    expect(was.px, `${was.px}px is too small to read as the old price`)
-      .toBeGreaterThanOrEqual(24);
+    /* 20px, NOT 24. The complaint this test exists for was 13px grey type
+       under a footnote; the floor is there to stop it sliding back to that,
+       not to forbid the hero scaling type down a step on a short screen,
+       which it does deliberately to keep the button above the fold. At
+       320x568 it renders 23px, which failed an arbitrary 24 and reads
+       perfectly well. */
+    expect(was.px, `${was.px}px is back to being a footnote`)
+      .toBeGreaterThanOrEqual(20);
     expect(was.ruled, 'no rule through the old price').toBe(true);
 
     /* AND THE LINK CARRIES THE CODE THAT MAKES THE NUMBER TRUE. Verified
@@ -1834,3 +1908,32 @@ test('the welcome offer says what it is, what it costs and why she has it',
       .toContain('discount=HORMONE25OFF');
     expect(href, 'the old ten percent code must be gone').not.toContain('JJTEN');
   });
+
+test('the kit headline uses her name, and stands up without one', async ({ page }) => {
+  /* SHE GAVE HER NAME AT THE EMAIL GATE, and a woman who arrived from JJ's
+     own list never saw that screen. Both have to read as a sentence: the
+     fallback is not a cosmetic nicety, it is most of JJ's list. */
+  const seed = {
+    sym: ['sleep'], main: 'sleep', age: '40-44', cycle: 'unpredictable',
+    pattern: 'most', tried: ['food'], want: 'sleep',
+  };
+
+  for (const [name, expected] of [
+    ['Dana', 'Dana, feel like YOU again in 60 days.'],
+    ['', 'Feel like YOU again in 60 days.'],
+    /* A name of only spaces is the one a real form produces, and it must not
+       render as ", feel like YOU again". */
+    ['   ', 'Feel like YOU again in 60 days.'],
+  ]) {
+    await page.addInitScript(
+      (st) => sessionStorage.setItem('hf_quiz_state_v3', JSON.stringify(st)),
+      { ...seed, name },
+    );
+    await page.goto('/quiz/offer-kit');
+    await expect(heading(page), `name ${JSON.stringify(name)}`).toHaveText(expected);
+  }
+
+  /* And the one-bottle offer keeps its own headline: this is the kit's. */
+  await page.goto('/quiz/kit');
+  await expect(heading(page)).toHaveText('Hormone Focus, your daily support');
+});

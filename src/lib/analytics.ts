@@ -12,6 +12,7 @@ import { cartPath, type OfferKind } from './offer';
 import { captureListLink } from './listLink';
 import { initPostHog, phCapture, phCaptureBeacon, phIdentify } from './posthog';
 import { REVIEW } from '../review/flag';
+import { getArm } from './arm';
 
 declare global {
   interface Window {
@@ -27,8 +28,10 @@ declare global {
 
 type Props = Record<string, unknown>;
 
-function push(event: string, props: Props = {}) {
+function push(event: string, rawProps: Props = {}) {
   try {
+    /* The offer switch: every event says which offer she saw. */
+    const props: Props = { ...rawProps, hf_offer: getArm() };
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ event, ...props });
     window.gtag?.('event', event, props);
@@ -607,7 +610,12 @@ export function shopUrl(
   const ad = readAttribution();
 
   /* The cart, not the checkout. Asserted rather than assumed from the base,
-     because losing it sends her straight to payment. */
+     because losing it sends her straight to payment.
+
+     DIRECTION 2 TOOK IT OFF on 11 November and David put it back on 12
+     November: the funnel sends her to the cart, as it did before that
+     change and as main still does. Deleting it skips the cart page, which
+     is a different funnel and not the one we are running. */
   if (url.pathname.includes(':')) url.searchParams.set('storefront', 'true');
 
   for (const key of PASS_THROUGH) {
@@ -648,6 +656,8 @@ export function shopUrl(
    * shapes are untouched and this is two more parameters. */
   url.searchParams.set('attributes[hf_funnel]', QUIZ_FUNNEL);
   url.searchParams.set('attributes[hf_quiz_landing]', readQuizLanding());
+  /* THE OFFER SWITCH: which offer she was shown, on the order. */
+  url.searchParams.set('attributes[hf_offer]', getArm());
 
   /* A REAL UTM, for GA4 and Shopify's marketing reports, and only where she
      did not bring one of her own. See QUIZ_CAMPAIGN. */

@@ -26,6 +26,8 @@
  * $pageview happens on the same tick as init.
  */
 import type { PostHog } from 'posthog-js';
+import { REVIEW } from '../review/flag';
+import { getArm } from './arm';
 
 /**
  * The publishable project key, committed for the same reason the Clarity
@@ -73,7 +75,7 @@ function queue(fn: (p: PostHog) => void) {
 export function initPostHog(): void {
   try {
     if (started || typeof window === 'undefined') return;
-    if (!KEY || BLOCKED.test(window.location.hostname)) return;
+    if (REVIEW || !KEY || BLOCKED.test(window.location.hostname)) return;
     started = true;
 
     void import('posthog-js').then(({ default: posthog }) => {
@@ -102,7 +104,9 @@ export function initPostHog(): void {
   } catch { /* tracking must never break the funnel */ }
 }
 
-export function phCapture(event: string, props: Record<string, unknown> = {}): void {
+export function phCapture(event: string, rawProps: Record<string, unknown> = {}): void {
+  /* The offer switch: every event says which offer she saw. */
+  const props = { ...rawProps, hf_offer: getArm() };
   queue((p) => p.capture(event, props));
 }
 
@@ -136,7 +140,8 @@ export function phCapture(event: string, props: Record<string, unknown> = {}): v
  * wrong one. With batching off a capture leaves as an immediate XHR that the
  * navigation can cancel, and nothing is left queued for the drain to beacon.
  */
-export function phCaptureBeacon(event: string, props: Record<string, unknown> = {}): void {
+export function phCaptureBeacon(event: string, rawProps: Record<string, unknown> = {}): void {
+  const props = { ...rawProps, hf_offer: getArm() };
   queue((p) => {
     p.capture(event, props, { transport: 'sendBeacon' } as Parameters<typeof p.capture>[2]);
   });

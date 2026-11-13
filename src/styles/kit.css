@@ -956,9 +956,14 @@
    an in-app browser hands this page 560-600px of height, the hero gained a
    label and a price line, and the button above the fold is the thing that
    must not give. Specificity carries these over the media queries above. */
-.kitHeroShot.isKit { max-width: 460px; max-height: 232px; }
-@media (max-height: 720px) { .kitHeroShot.isKit { max-height: 16vh; } }
-@media (max-height: 520px) { .kitHeroShot.isKit { max-height: 12vh; } }
+/* BIGGER, 6 November. The composite carries two bottles and three guides,
+   which at 232px was four products in a strip you had to lean in to read.
+   The caps below are the fold's, not the picture's: it takes what it can
+   get on a short screen and a lot more where there is room. */
+.kitHeroShot.isKit { max-width: 520px; max-height: 300px; }
+@media (max-height: 760px) { .kitHeroShot.isKit { max-height: 22vh; } }
+@media (max-height: 640px) { .kitHeroShot.isKit { max-height: 15vh; } }
+@media (max-height: 520px) { .kitHeroShot.isKit { max-height: 13vh; } }
 
 /* -- who JJ is, now a section of its own ---------------------------------
    It opened the review teaser until the proof moved under the hero. */
@@ -1086,6 +1091,11 @@
 .nStepWhat {
   align-self: end; font-size: var(--t-sub); line-height: 1.28;
   letter-spacing: -.01em; color: var(--ink);
+}
+.nStepWhen {
+  display: block; margin-bottom: 2px;
+  font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--plum);
 }
 .nStepTakes {
   align-self: start; margin-top: 3px;
@@ -1557,12 +1567,12 @@
 }
 .kitWas::after {
   content: ''; position: absolute; left: -7%; right: -7%; top: 50%;
-  height: 2.5px; background: #E23B3B; border-radius: 3px;
+  height: 1.5px; background: #E23B3B; border-radius: 3px;
   transform: translateY(-50%) rotate(-11deg);
 }
 /* The subscription's number is smaller, so its old price follows it down. */
 .kitDeal2Now .kitWas { font-size: 21px; }
-.kitDeal2Now .kitWas::after { height: 2px; }
+.kitDeal2Now .kitWas::after { height: 1.5px; }
 .kitDeal2Num {
   font-size: clamp(36px, 10vw, 44px); font-weight: 800; line-height: 1;
   letter-spacing: -.025em; color: var(--plum);
@@ -1733,8 +1743,12 @@
 /* THE OLD PRICE, RULED LIKE THE VALUE STACK'S. Same red diagonal, scaled up:
    a line through a price is what reads as "not this", and a 13px grey
    strikethrough reads as nothing at all. */
+/* THINNER, 5 November. At 3px over a 30px numeral the rule sat across the
+   waist of the digits and you could not tell $49.99 from $40.99, which is
+   the one thing this number is on the page to say. 1.5px reads as a line
+   through a price without eating the price. */
 .kitWas.isBig { font-size: 30px; font-weight: 700; color: var(--ink-2); }
-.kitWas.isBig::after { height: 3px; }
+.kitWas.isBig::after { height: 1.5px; }
 
 /* What she keeps, in money rather than in percent. */
 .kitPrice.isWelcome .kitPriceSave {
@@ -1783,7 +1797,142 @@
   .kitHero .kitPrice.isWelcome .kitPriceSave { display: none; }
 }
 
-/* The Okendo mark under the hero rating was hidden here for an hour on
-   5 November to pay for the bordered price card. The card is gone and the
-   room came back with it: measured at all five in-app viewports, the button
-   clears the fold with the mark showing. */
+/* THE OKENDO MARK UNDER THE HERO RATING gives way on a short screen. It is
+   the second line of the badge and costs about 20px; the rating itself, the
+   number and the count, stays. The mark appears twice more down the page, on
+   the review teaser and on the wall, so what is lost is a repetition.
+
+   It was hidden on 5 November, restored when the price card came out, and
+   is back on 6 November: the kit's hero now carries a bigger composite and
+   the same price block as the bottle page, and something has to give. */
+@media (max-height: 720px) {
+  .kitHero .pfRatingBy { display: none; }
+}
+
+/* The kit's two anchors under its price: what $47 sits next to, and why she
+   has it. Secondary by design, the two prices above are the block. */
+.kitPriceAnchor {
+  margin: 9px 0 0; max-width: 30ch;
+  font-size: 12px; line-height: 1.45; color: var(--ink-2);
+}
+.kitPriceAnchor.isWhy { margin-top: 6px; color: var(--ink-3); }
+
+/* The guarantee closes the stack, so it needs the gap the bonuses have. */
+.kitVsPromises { margin-top: 9px; }
+
+/* ========================================================================
+   THE STEAL, AS TWO CARDS                                 6 November 2026
+   ========================================================================
+
+   Two sentences used to say this under the button and read as small print.
+   Side by side, $49.99 against $47 makes the argument without being read.
+
+   THE $49.99 IS NOT STRUCK, deliberately: it is what one bottle costs
+   today, not a "was". Striking it would turn a fair comparison into a fake
+   discount. The weight of the two cards is what carries it.
+   ------------------------------------------------------------------------ */
+
+/* A BAND OF ITS OWN, 6 November. Inside the hero, under the guarantee
+   line, it read as a footnote to the hero. --wash is the page's own section
+   tint, a step up from the --ground the hero sits on and a step down from
+   the near-white --surface-2 band below, with the hairlines .kitBand.offer
+   already uses so the edges are not left to the tint alone. */
+.kitBand.kitCmpBand {
+  background: var(--wash);
+  border-top: 1px solid var(--wash-2); border-bottom: 1px solid var(--wash-2);
+}
+
+.kitCompare { margin: 0 auto; max-width: 380px; }
+
+/* The framing, above the cards. */
+.kitCmpHead { margin: 0 0 18px; text-align: center; }
+.kitCmpTitle {
+  margin: 0; font-size: clamp(20px, 5.6vw, 25px); font-weight: 800;
+  line-height: 1.2; letter-spacing: -.02em; color: var(--ink);
+  text-wrap: balance;
+}
+.kitCmpLead {
+  margin: 9px 0 0; font-size: var(--t-small); line-height: 1.5;
+  color: var(--ink-2); text-wrap: pretty;
+}
+
+.kitCmpCards {
+  display: grid; grid-template-columns: 1fr 1.38fr; gap: 10px;
+  align-items: stretch;
+}
+
+.kitCmp {
+  position: relative; display: grid; justify-items: center; gap: 2px;
+  padding: 14px 10px 12px; border-radius: var(--radius);
+  border: 1.5px solid var(--line); background: var(--surface);
+  text-align: center;
+}
+/* The kit side is the selected state the rest of the page uses. */
+.kitCmp.isKit {
+  padding-top: 20px;
+  border: 2px solid var(--plum);
+  background: linear-gradient(165deg, #fff, #f7ecfb);
+}
+.kitCmpRibbon {
+  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+  padding: 4px 11px; border-radius: 999px; white-space: nowrap;
+  background: var(--plum); color: #fff;
+  font-size: 10px; font-weight: 800; letter-spacing: .06em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 18px -10px rgba(91, 42, 128, .7);
+}
+
+.kitCmpLabel {
+  margin: 0; font-size: 11px; font-weight: 800; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.kitCmp.isKit .kitCmpLabel { color: var(--plum); }
+
+.kitCmpShot {
+  width: auto; height: 58px; object-fit: contain; margin: 4px 0 2px;
+  mix-blend-mode: multiply;
+}
+.kitCmp.isKit .kitCmpShot { height: 64px; }
+/* The full-kit composite is landscape and five things wide, so it is sized
+   by the card rather than by a height: at height: 64px it would be 144px
+   across and the bottles would be thumbnails of thumbnails. */
+.kitCmp.isKit .kitCmpShot.isFull {
+  /* Out to the card's edges: the five things are 2.25 times as wide as they
+     are tall, so every pixel of width is one the bottles can be read at. */
+  width: calc(100% + 14px); height: auto; max-height: 96px; margin: 2px -7px;
+}
+
+.kitCmpPrice {
+  margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.02em;
+  line-height: 1.1; color: var(--ink-2);
+}
+.kitCmp.isKit .kitCmpPrice { font-size: 26px; color: var(--plum); }
+/* The word under the number, not beside it: see compareKitPrice. */
+.kitCmpToday {
+  display: block; margin-top: 1px;
+  font-size: 11px; font-weight: 700; letter-spacing: .04em;
+  color: var(--ink-3);
+}
+
+.kitCmpSub {
+  margin: 2px 0 0; font-size: 11.5px; line-height: 1.35; color: var(--ink-3);
+}
+
+/* The caption that used to sit here is the band's headline now: see
+   COMPARE_HEAD. This is the small line that stayed. */
+.kitCmpWhy {
+  margin: 12px 0 0; text-align: center;
+  font-size: 11.5px; color: var(--ink-3);
+}
+
+/* Direction 2: the result hero rises in, line by line. Off when she has
+   asked for less motion. */
+@keyframes d2FadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.resHero.d2Reveal > * { animation: d2FadeUp .5s ease-out both; }
+.resHero.d2Reveal > :nth-child(2) { animation-delay: .12s; }
+.resHero.d2Reveal > :nth-child(3) { animation-delay: .24s; }
+.resHero.d2Reveal > :nth-child(4) { animation-delay: .4s; }
+@media (prefers-reduced-motion: reduce) { .resHero.d2Reveal > * { animation: none; } }
+
+/* Plan v13: the one-line offer teaser above the plan button. */
+.planTease { margin: 18px 0 0; text-align: center; color: var(--plum); font-size: var(--t-small); }
