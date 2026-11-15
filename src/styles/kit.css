@@ -549,7 +549,8 @@
  * page is a long scroll with its own sticky call to action at the foot, and
  * two fixed bars eat the small screen from both ends at once. David's call,
  * and the right one: the bar scrolls away and the buy bar stays. */
-.appHeader[data-step='r2'] {
+.appHeader[data-step='r2'],
+.appHeader[data-step='offerKit'] {
   position: static;
   background: var(--ground);
   backdrop-filter: none;
@@ -1936,3 +1937,66 @@
 
 /* Plan v13: the one-line offer teaser above the plan button. */
 .planTease { margin: 18px 0 0; text-align: center; color: var(--plum); font-size: var(--t-small); }
+
+/* ========================================================================
+   THE VSL SCREEN                                          14 November 2026
+   ========================================================================
+
+   The video from JJ, the button under it and the two proof rails, above an
+   offer that is the offer page entire. Everything below the rails is R2's
+   own CSS, untouched: this file styles the four things above it.
+   ------------------------------------------------------------------------ */
+
+/* minmax(0, 1fr) AND NOT auto. The proof rails hold a marquee track that is
+   `width: max-content`, thousands of pixels wide, and an auto column takes
+   its size from that: the whole screen laid out 3456px across and every
+   element above the rails sat off the right of the viewport, including the
+   video, which then never intersected and so never loaded. */
+.vsl {
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  justify-items: center; text-align: center;
+}
+
+.vslHead {
+  margin: 0 0 18px; max-width: 20ch;
+  font-size: clamp(23px, 6.4vw, 31px); font-weight: 800;
+  line-height: 1.18; letter-spacing: -.02em; color: var(--ink);
+  text-wrap: balance;
+}
+
+/* FULL WIDTH ON A PHONE, CAPPED ON A DESKTOP. 4:5 upright is tall, and an
+   upright video given a 1440px column is a video nobody can see the top and
+   the bottom of at once. */
+.vslPlayer { width: 100%; max-width: 420px; margin: 0 auto; }
+
+.vslFrame {
+  position: relative; height: 0; width: 100%;
+  border-radius: var(--radius-lg); overflow: hidden;
+  background: var(--wash-2);
+  box-shadow: 0 18px 44px -24px rgba(31, 14, 46, .45);
+}
+.vslFrame iframe {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;
+}
+
+.vslCta { margin-top: 20px; max-width: 420px; width: 100%; }
+
+/* ROOM TO BREATHE AROUND THE TWO SLIDERS. David, 14 November: they were
+   cramped against the button above and the offer below, and against each
+   other. The rails bring almost no margin of their own, so all of it is
+   here: a band's worth above and below the pair, and a real gap between
+   the logos and the women. */
+.vslProof {
+  width: 100%;
+  margin: 44px 0 40px;
+  /* minmax(0, 1fr) for the same reason .vsl has it: a grid column sized
+     `auto` takes its width from the marquee track inside these rails, which
+     is thousands of pixels wide. */
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 34px;
+}
+/* .pfPress carries a 20px margin-top of its own for the offer page, which
+   here would stack on top of the gap above. */
+.vslProof .pfPress { margin-top: 0; }
+/* And the eyebrow over the logos sits closer to its own logos than to the
+   button above it. */
+.vslProof .pfPressT { margin-bottom: 16px; }

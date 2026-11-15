@@ -379,6 +379,45 @@ export const track = {
     ph('hf_offer_viewed', { offer_variant: variant, quiz_segment: outcome });
   },
 
+  /* -------------------------------------------- the VSL, 14 November -- */
+
+  /**
+   * THREE EVENTS, AND NOT ONE MORE THAN WE CAN STAND BEHIND.
+   *
+   * The player is a cross-origin Loom iframe. There is no timeupdate and no
+   * duration, so there is no honest 25/50/75/complete: inventing them would
+   * put four lines on the PostHog funnel that mean nothing. Watch time
+   * lives in Loom's own dashboard. What this file can say truthfully is
+   * that the screen was seen, that she touched the player, and that she
+   * pressed the button under it.
+   *
+   * NEW NAMES, NEVER RENAMED ONES: the funnel in PostHog project 667442 is
+   * built on the exact strings above, so these three are additions.
+   */
+
+  /** The VSL screen came into view. Fired once, by IntersectionObserver. */
+  vslView(outcome: string) {
+    push('hf_vsl_viewed', { outcome });
+    meta('ViewContent', { content_name: 'vsl' }, true);
+    ph('hf_vsl_viewed', { quiz_segment: outcome });
+  },
+
+  /**
+   * She touched the player. NOT a play event: see VslPlayer, which infers
+   * this from focus moving into the iframe, because the iframe will not
+   * tell us anything more than that.
+   */
+  vslPlay(outcome: string) {
+    push('hf_vsl_play_clicked', { outcome });
+    ph('hf_vsl_play_clicked', { quiz_segment: outcome });
+  },
+
+  /** The button under the video. It scrolls to the offer, it does not buy. */
+  vslCta(outcome: string) {
+    push('hf_vsl_cta_clicked', { outcome });
+    ph('hf_vsl_cta_clicked', { quiz_segment: outcome });
+  },
+
   /** The Starter Guide page, by archetype. Her own plan, before any email. */
   planView(archetype: string) {
     push('view_plan', { archetype });

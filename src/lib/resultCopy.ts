@@ -1047,6 +1047,26 @@ export const RESULT_PILL = '\u2713 Your 60-day plan is ready';
 export const RESULT_CASE =
   'It can feel like your body belongs to a stranger. That is common at this stage, and it does not mean something is wrong with you. Your body now needs different support, so we built your plan around it.';
 export const RESULT_TO_PLAN_V5 = 'SEE MY PLAN';
+
+/* THE SAME BUTTON, WHEN IT LEADS SOMEWHERE ELSE. 14 November 2026.
+ *
+ * With VSL_FLOW on, the next screen is a video and not her plan, so "SEE MY
+ * PLAN" would be a promise the next tap does not keep. Uppercase to match
+ * the label it stands in for; the arrow is added by reveal.tsx either way.
+ *
+ * TODO David: the alternative he listed is "HEAR IT FROM JJ".
+ */
+export const RESULT_TO_VSL = 'WATCH WHAT THIS MEANS';
+
+/**
+ * The handoff paragraph, when what follows is a video rather than a plan.
+ *
+ * TODO David: placeholder, for him to finalize. It is RESULT_CASE with the
+ * last clause changed, so the first two sentences she reads are the ones
+ * that were already signed off.
+ */
+export const RESULT_CASE_VSL =
+  'It can feel like your body belongs to a stranger. That is common at this stage, and it does not mean something is wrong with you. JJ recorded a short video to walk you through what your result means.';
 export const RESULT_FINE =
   'This check is not a diagnosis. Talk to your doctor if your bleeding is very heavy, comes between periods, comes back after 12 months without a period, or if anything worries you.';
 /** B's stat card (Cleveland Clinic). C and E keep their live facts. */

@@ -27,14 +27,19 @@ export function Screen({ id, children }: { id: string; children: ReactNode }) {
 
 /** The heading focus lands on. One per screen. */
 export function ScreenTitle({
-  children, className = 'q', as: Tag = 'h1',
+  children, className = 'q', as: Tag = 'h1', id,
 }: {
   children: ReactNode;
   className?: string;
   as?: 'h1' | 'h2';
+  /** For a heading something else needs to scroll to. */
+  id?: string;
 }) {
   return (
-    <Tag className={className} tabIndex={-1} data-screen-heading style={{ outline: 'none' }}>
+    <Tag
+      id={id} className={className} tabIndex={-1} data-screen-heading
+      style={{ outline: 'none' }}
+    >
       {children}
     </Tag>
   );

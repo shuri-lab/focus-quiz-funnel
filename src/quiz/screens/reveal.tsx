@@ -3,6 +3,7 @@ import { useQuiz } from '../context';
 import { submitListLead } from '../../lib/leads';
 import { readListLink } from '../../lib/listLink';
 import { Screen, ScreenTitle, ActionBar } from '../../components/Screen';
+import { VSL_FLOW } from '../../lib/vsl';
 import {
   TILES, BRAND, docReason, has, kindExit, mainConcern, masked, otherConcerns, stateKey,
 } from '../../lib/logic';
@@ -15,7 +16,8 @@ import {
    this page names her result and hands over. All seven are still exported
    and still read by the copy gate. */
 import {
-  PERI_STAT, RESULT_CASE, RESULT_FINE, RESULT_PILL, RESULT_REASSURE, RESULT_TO_PLAN_V5, pairLine,
+  PERI_STAT, RESULT_CASE, RESULT_CASE_VSL, RESULT_FINE, RESULT_PILL, RESULT_REASSURE,
+  RESULT_TO_PLAN_V5, RESULT_TO_VSL, pairLine,
   resultKicker, stageBlock,
 } from '../../lib/resultCopy';
 import type { Outcome, SymptomId } from '../../lib/logic';
@@ -127,12 +129,15 @@ export function R1() {
         <p className="resStatSrc">Source: {outcome === 'B' ? PERI_STAT.source : fact.source}</p>
       </section>
 
-      {/* 5. THE CASE FOR HER PLAN, one paragraph. */}
-      <p className="resHandoff">{RESULT_CASE}</p>
+      {/* 5. THE CASE FOR WHAT COMES NEXT, one paragraph.
+          Which is a plan or a video from JJ, depending on the flow: see
+          VSL_FLOW in vsl.ts. The button has to name the screen it actually
+          opens, so both the paragraph and the label follow the flag. */}
+      <p className="resHandoff">{VSL_FLOW ? RESULT_CASE_VSL : RESULT_CASE}</p>
 
       <ActionBar>
         <button type="button" className="cta" onClick={() => next()}>
-          {RESULT_TO_PLAN_V5} &rarr;
+          {VSL_FLOW ? RESULT_TO_VSL : RESULT_TO_PLAN_V5} &rarr;
         </button>
       </ActionBar>
 

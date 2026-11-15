@@ -28,6 +28,8 @@ export const STEP_SLUG: Record<ScreenId, string> = {
   load: 'reading-your-answers',
   gate: 'your-result',
   r1: 'result',
+  /* The video from JJ, with the offer under it. See vsl.ts. */
+  vsl: 'welcome-video',
   cause: 'whats-happening',
   plan: 'your-plan',
   meet: 'meet-hormone-focus',

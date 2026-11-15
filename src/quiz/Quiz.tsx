@@ -29,12 +29,15 @@ const R2Kit = () => (getArm() === 'bottle25'
   : <R2 variant="kit" screen="r2" />);
 const R2OneBottle = () => <R2 variant="bottle" screen="offerKit" />;
 import { RCause, RMeet } from './screens/nurture';
+import { Vsl } from './screens/vsl';
 
 const SCREENS: Record<ScreenId, () => React.JSX.Element> = {
   q1: Q1, q2: Q2, q3: Q3, q4: Q4, q4b: Q4b, q5: Q5, q6: Q6, q7: Q7,
   stat: NotJustYou,
   load: Load, gate: Gate,
   r1: R1,
+  /* The video from JJ, with the offer under it. See vsl.ts. */
+  vsl: Vsl,
   /* The three that earn the offer. See nurtureCopy.ts. */
   cause: RCause, plan: YourPlan, meet: RMeet,
   r2: R2Kit, offerKit: R2OneBottle, rDoc: RDoc,
