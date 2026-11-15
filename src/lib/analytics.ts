@@ -12,6 +12,7 @@ import { cartPath, type OfferKind } from './offer';
 import { captureListLink } from './listLink';
 import { initPostHog, phCapture, phCaptureBeacon, phIdentify } from './posthog';
 import { REVIEW } from '../review/flag';
+import { getArm } from './arm';
 
 declare global {
   interface Window {
@@ -27,8 +28,10 @@ declare global {
 
 type Props = Record<string, unknown>;
 
-function push(event: string, props: Props = {}) {
+function push(event: string, rawProps: Props = {}) {
   try {
+    /* The offer switch: every event says which offer she saw. */
+    const props: Props = { ...rawProps, hf_offer: getArm() };
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ event, ...props });
     window.gtag?.('event', event, props);
@@ -376,6 +379,45 @@ export const track = {
     ph('hf_offer_viewed', { offer_variant: variant, quiz_segment: outcome });
   },
 
+  /* -------------------------------------------- the VSL, 14 November -- */
+
+  /**
+   * THREE EVENTS, AND NOT ONE MORE THAN WE CAN STAND BEHIND.
+   *
+   * The player is a cross-origin Loom iframe. There is no timeupdate and no
+   * duration, so there is no honest 25/50/75/complete: inventing them would
+   * put four lines on the PostHog funnel that mean nothing. Watch time
+   * lives in Loom's own dashboard. What this file can say truthfully is
+   * that the screen was seen, that she touched the player, and that she
+   * pressed the button under it.
+   *
+   * NEW NAMES, NEVER RENAMED ONES: the funnel in PostHog project 667442 is
+   * built on the exact strings above, so these three are additions.
+   */
+
+  /** The VSL screen came into view. Fired once, by IntersectionObserver. */
+  vslView(outcome: string) {
+    push('hf_vsl_viewed', { outcome });
+    meta('ViewContent', { content_name: 'vsl' }, true);
+    ph('hf_vsl_viewed', { quiz_segment: outcome });
+  },
+
+  /**
+   * She touched the player. NOT a play event: see VslPlayer, which infers
+   * this from focus moving into the iframe, because the iframe will not
+   * tell us anything more than that.
+   */
+  vslPlay(outcome: string) {
+    push('hf_vsl_play_clicked', { outcome });
+    ph('hf_vsl_play_clicked', { quiz_segment: outcome });
+  },
+
+  /** The button under the video. It scrolls to the offer, it does not buy. */
+  vslCta(outcome: string) {
+    push('hf_vsl_cta_clicked', { outcome });
+    ph('hf_vsl_cta_clicked', { quiz_segment: outcome });
+  },
+
   /** The Starter Guide page, by archetype. Her own plan, before any email. */
   planView(archetype: string) {
     push('view_plan', { archetype });
@@ -607,7 +649,12 @@ export function shopUrl(
   const ad = readAttribution();
 
   /* The cart, not the checkout. Asserted rather than assumed from the base,
-     because losing it sends her straight to payment. */
+     because losing it sends her straight to payment.
+
+     DIRECTION 2 TOOK IT OFF on 11 November and David put it back on 12
+     November: the funnel sends her to the cart, as it did before that
+     change and as main still does. Deleting it skips the cart page, which
+     is a different funnel and not the one we are running. */
   if (url.pathname.includes(':')) url.searchParams.set('storefront', 'true');
 
   for (const key of PASS_THROUGH) {
@@ -648,6 +695,8 @@ export function shopUrl(
    * shapes are untouched and this is two more parameters. */
   url.searchParams.set('attributes[hf_funnel]', QUIZ_FUNNEL);
   url.searchParams.set('attributes[hf_quiz_landing]', readQuizLanding());
+  /* THE OFFER SWITCH: which offer she was shown, on the order. */
+  url.searchParams.set('attributes[hf_offer]', getArm());
 
   /* A REAL UTM, for GA4 and Shopify's marketing reports, and only where she
      did not bring one of her own. See QUIZ_CAMPAIGN. */

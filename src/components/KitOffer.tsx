@@ -1,10 +1,12 @@
 import { SHOP_BASE } from '../lib/logic';
 import { useHydrated } from '../lib/useHydrated';
 import { useMemo } from 'react';
+import { REVIEW } from '../review/flag';
 import { shopUrl, track } from '../lib/analytics';
 import {
-  KIT_BUY_CTA, MONEY_BACK_BADGE, ONE_MONTH_PRICE, QUIZ_KIT_ROWS,
-  QUIZ_KIT_SAVING, QUIZ_KIT_VALUE_TOTAL, SHOT_KIT_BOTTLE, SHOT_KIT_HERO,
+  KIT_BUY_CTA, MONEY_BACK_BADGE, ONE_MONTH_PRICE, kitCode, kitToday, isKit47, SHOT_KIT_THUMB,
+  SHOT_BOTTLE_THUMB, SHOT_KIT_FULL,
+  QUIZ_KIT_ROWS, QUIZ_KIT_VALUE_TOTAL, SHOT_KIT_BOTTLE,
   SINGLE_AFTER_DISCOUNT, SINGLE_DISCOUNT_CODE, SUBSCRIBE_PRICE, money,
   singleDailyPrice,
 } from '../lib/offer';
@@ -17,13 +19,16 @@ import {
   BOTTLE_CTA, BOTTLE_FULL_LABEL, BOTTLE_HERO_HEAD, BOTTLE_SAVE, BOTTLE_SHOT_ALT,
   BOTTLE_WHATYOUGET, FREE_SHIPPING, HF_NAME,
   KIT_BATCH_SHOWN, KIT_EYEBROW, KIT_INCLUDED_HEAD,
-  KIT_ONCE_NOTE, KIT_SAVE_PREFIX, KIT_SHOT_ALT, KIT_STACK_HEAD, KIT_SUB_NOTE,
+  COMPARE_KIT_LABEL, COMPARE_KIT_SUB, COMPARE_KIT_TODAY,
+  COMPARE_ONE_SUB, COMPARE_WHY,
+  KIT_OFFER_PILL, KIT_ONCE_NOTE, KIT_SHOT_ALT, KIT_STACK_HEAD, KIT_SUB_NOTE,
   KIT_SUB_PER, KIT_TODAY_LABEL, KIT_TOTAL_LABEL,
   OFFER_CARD_HEAD, OFFER_CARD_SUB, OFFER_ONCE_NOTE, PROMISE_BODY,
   PROMISE_EYEBROW, PROMISE_FINE, PROMISE_HEAD, SUB_BEST_VALUE, SUB_LABEL,
   TRUST_ITEMS, WELCOME_DETAIL, WELCOME_LABEL, WELCOME_WHY_SHORT,
-  bottleBatchLine, subLockLine,
-  kitBatchLine, welcomeSaving,
+  bottleBatchLine, compareKitPrice, compareSub, kitSaving, subLockLine,
+  compareHead, compareRibbon, compareOneLabel, compareOnePrice,
+  welcomeSaving,
 } from '../lib/kitCopy';
 
 /* THE OFFER, AS IT IS ON JJ'S OWN PAGE.
@@ -107,8 +112,17 @@ interface Props {
  * SINGLE_DISCOUNT_CODE is passed here and nowhere else, which is what keeps
  * /offer and /plan selling the same bottle at full price.
  */
-export function kitHref(outcome: string, angle: string): string {
-  return shopUrl(SHOP_BASE, outcome, angle, 'single', SINGLE_DISCOUNT_CODE);
+export function kitHref(
+  outcome: string,
+  angle: string,
+  variant: 'bottle' | 'kit' = 'bottle',
+): string {
+  /* THE KIT BUYS THE BUNDLE, 6 November. Two bottles is what makes its
+     "60-day" true, so its button carries PROTOCOL_VARIANT_ID with KIT47.
+     The one-bottle offer is untouched: single variant, HORMONE25OFF. */
+  return variant === 'kit'
+    ? shopUrl(SHOP_BASE, outcome, angle, 'protocol', kitCode())
+    : shopUrl(SHOP_BASE, outcome, angle, 'single', SINGLE_DISCOUNT_CODE);
 }
 
 function Tick() {
@@ -129,15 +143,82 @@ function Tick() {
  * component as the card below, so the two can never drift apart.
  */
 export function KitPrice() {
+  /* THE BOTTLE PAGE'S BLOCK, WITH THE KIT'S NUMBERS. 6 November: the two
+     offer pages set the same three facts two different ways, and the bottle's
+     is the one that works. Same markup, same classes, so a change to one is
+     a change to both rather than a thing to remember. */
   return (
-    <div className="kitPrice">
-      <p className="kitPriceWas">
-        <span>{KIT_TOTAL_LABEL}</span> <s>{QUIZ_KIT_VALUE_TOTAL}</s>
+    <div className="kitPrice isWelcome">
+      <p className="kitWelcome">
+        <b>{KIT_OFFER_PILL}</b>
       </p>
-      <p className="kitPriceNow">
-        <span>{KIT_TODAY_LABEL}</span> <b>{money(SINGLE_AFTER_DISCOUNT)}</b>
+
+      <p className="kitPriceRow">
+        <span className="kitPriceFull">
+          <small>{KIT_TOTAL_LABEL}</small>
+          <s className="kitWas isBig">{QUIZ_KIT_VALUE_TOTAL}</s>
+        </span>
+        <span className="kitPriceToday">
+          <small>{KIT_TODAY_LABEL}</small>
+          <b>{money(kitToday())}</b>
+        </span>
       </p>
-      <p className="kitPriceSave">{KIT_SAVE_PREFIX} {QUIZ_KIT_SAVING}</p>
+
+      <p className="kitPriceSave">{kitSaving()}</p>
+      {/* Review build only (Jane, 11 Nov): $47 is David's proposal, not agreed. */}
+      {REVIEW && isKit47() && <p className="fieldErr">Proposed price for review. Not agreed yet.</p>}
+    </div>
+  );
+}
+
+/**
+ * THE STEAL, SHOWN RATHER THAN DESCRIBED.
+ *
+ * Two sentences used to say this under the button: that the kit costs less
+ * than one bottle, and that the price belongs to her Hormone Check. Both
+ * true, both read as small print. Side by side the two prices make the
+ * argument without being read.
+ *
+ * THE $49.99 IS NOT STRUCK. It is a real price that a real person pays for
+ * one bottle today, not a "was": striking it would turn a fair comparison
+ * into a fake discount. The contrast between the cards is the point.
+ */
+export function KitCompare() {
+  return (
+    <div className="kitCompare">
+      {/* THE ARGUMENT FIRST, THE EVIDENCE SECOND. This was one line under
+          the cards, which left her to work out what the two prices were for
+          after she had already read them. */}
+      <header className="kitCmpHead">
+        <h2 className="kitCmpTitle">{compareHead()}</h2>
+        <p className="kitCmpLead">{compareSub()}</p>
+      </header>
+
+      <div className="kitCmpCards">
+        <div className="kitCmp">
+          <p className="kitCmpLabel">{compareOneLabel()}</p>
+          <img className="kitCmpShot" src={isKit47() ? SHOT_BOTTLE_THUMB : SHOT_KIT_THUMB} alt=""
+            width={180} height={180} loading="lazy" decoding="async" />
+          <p className="kitCmpPrice">{money(compareOnePrice())}</p>
+          <p className="kitCmpSub">{COMPARE_ONE_SUB}</p>
+        </div>
+
+        <div className="kitCmp isKit">
+          <span className="kitCmpRibbon">{compareRibbon()}</span>
+          <p className="kitCmpLabel">{COMPARE_KIT_LABEL}</p>
+          {/* THE WHOLE KIT, not two bottles: the card's price is being
+              compared against all five things. See SHOT_KIT_FULL. */}
+          <img className="kitCmpShot isFull" src={SHOT_KIT_FULL} alt=""
+            width={600} height={267} loading="lazy" decoding="async" />
+          <p className="kitCmpPrice">
+            {compareKitPrice()}
+            <small className="kitCmpToday">{COMPARE_KIT_TODAY}</small>
+          </p>
+          <p className="kitCmpSub">{COMPARE_KIT_SUB}</p>
+        </div>
+      </div>
+
+      <p className="kitCmpWhy">{COMPARE_WHY}</p>
     </div>
   );
 }
@@ -204,8 +285,13 @@ export function BottlePrice() {
  * only, and both read the same StackItem[].
  */
 function KitStack() {
-  const items = QUIZ_KIT_ROWS.filter((i) => !i.bonus);
+  /* THE GUARANTEE CLOSES THE STACK, not sits second. The rows split three
+     ways rather than two: what she is buying, the bonuses she is given, and
+     then the guarantee, which is a promise about the order rather than a
+     thing in the box. A row priced in money is one of the first kind. */
+  const items = QUIZ_KIT_ROWS.filter((i) => !i.bonus && i.worth.startsWith('$'));
   const bonuses = QUIZ_KIT_ROWS.filter((i) => i.bonus);
+  const promises = QUIZ_KIT_ROWS.filter((i) => !i.bonus && !i.worth.startsWith('$'));
 
   return (
     <div className="kitVs" data-af="stack">
@@ -249,6 +335,23 @@ function KitStack() {
         ))}
       </div>
 
+      {promises.length > 0 && (
+        <ul className="kitVsList kitVsPromises">
+          {promises.map((it) => (
+            <li key={it.what}>
+              <span className="kitVsName">
+                {it.img
+                  ? <img className="kitVsImg" src={it.img} alt="" width={180} height={180}
+                      loading="lazy" decoding="async" />
+                  : <span className="kitVsTick"><Tick /></span>}
+                <span>{it.what}</span>
+              </span>
+              <span className="kitVsVal">{it.worth}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
       <div className="kitVsTotal">
         <span>{KIT_TOTAL_LABEL}</span>
         <span className="kitVsTotalV struck">{QUIZ_KIT_VALUE_TOTAL}</span>
@@ -279,7 +382,10 @@ export function KitOffer({ outcome, angle, variant = 'kit' }: Props) {
      her attribution and every cart link shipped without a utm_*. Reading
      this gives the second render that rebuilds them. See useHydrated.ts. */
   const hydrated = useHydrated();
-  const once = useMemo(() => kitHref(outcome, angle), [outcome, angle, hydrated]);
+  const once = useMemo(
+    () => kitHref(outcome, angle, variant),
+    [outcome, angle, variant, hydrated],
+  );
   const sub = useMemo(
     () => shopUrl(SHOP_BASE, outcome, angle, 'subscribe'),
     [outcome, angle, hydrated],
@@ -295,7 +401,7 @@ export function KitOffer({ outcome, angle, variant = 'kit' }: Props) {
       <div className="kitCard kitLead">
         <div className="kitBottleHead">
           {isKit
-            ? <img src={SHOT_KIT_HERO} alt={KIT_SHOT_ALT} width={768} height={576}
+            ? <img src={SHOT_KIT_FULL} alt={KIT_SHOT_ALT} width={600} height={267}
                 decoding="async" />
             : <img src={SHOT_KIT_BOTTLE} alt={BOTTLE_SHOT_ALT} width={800} height={800}
                 decoding="async" />}
@@ -322,66 +428,85 @@ export function KitOffer({ outcome, angle, variant = 'kit' }: Props) {
               below now, at the size the subscription box sets it, and the
               badge says what she keeps instead. */}
           <span className="kitDealBadge">
-            {isKit ? `${KIT_SAVE_PREFIX} ${QUIZ_KIT_SAVING}` : BOTTLE_SAVE}
+            {isKit ? `${KIT_TOTAL_LABEL} ${QUIZ_KIT_VALUE_TOTAL}` : BOTTLE_SAVE}
           </span>
           <div className="kitDealNow">
-            <s className="kitWas">{money(ONE_MONTH_PRICE)}</s>
-            <span className="kitDealNum">{money(SINGLE_AFTER_DISCOUNT)}</span>
+            {/* THE KIT IS STRUCK AGAINST TWO BOTTLES, not one: that is what
+                is in the box, and $99.98 is what those cost bought singly. */}
+            {/* THE ANCHOR IS THE WHOLE KIT, never a line in it. It struck
+                $99.99, the two-bottle row, which quietly argued the kit is
+                worth two bottles rather than $196.99 of things. */}
+            <s className="kitWas">
+              {isKit ? QUIZ_KIT_VALUE_TOTAL : money(ONE_MONTH_PRICE)}
+            </s>
+            <span className="kitDealNum">
+              {money(isKit ? kitToday() : SINGLE_AFTER_DISCOUNT)}
+            </span>
           </div>
+          {REVIEW && isKit && isKit47() && <p className="fieldErr">Proposed price for review. Not agreed yet.</p>}
           <p className="kitDealNote">
-            {KIT_ONCE_NOTE} &middot; {singleDailyPrice()} a day
+            {KIT_ONCE_NOTE}
+            {!isKit && <> &middot; {singleDailyPrice()} a day</>}
           </p>
           <a
-            className="cta kitBtn" href={once} data-offer="single"
-            onClick={() => track.checkout(outcome, SINGLE_AFTER_DISCOUNT, 'single', 'kit-main')}
+            className="cta kitBtn" href={once} data-offer={isKit ? 'protocol' : 'single'}
+            onClick={() => track.checkout(
+              outcome,
+              isKit ? kitToday() : SINGLE_AFTER_DISCOUNT,
+              isKit ? 'protocol' : 'single',
+              'kit-main',
+            )}
           >
             {isKit ? KIT_BUY_CTA : BOTTLE_CTA} <Arrow />
           </a>
-          <p className="kitDealFine">{OFFER_ONCE_NOTE}</p>
+          {!isKit && <p className="kitDealFine">{OFFER_ONCE_NOTE}</p>}
           {/* The same fact as the hero's, in one line, where she is actually
               clicking. */}
           {!isKit && <p className="kitDealWhy">{WELCOME_WHY_SHORT}</p>}
         </div>
 
-        <div className="kitOr"><span>or</span></div>
+        {/* THE SUBSCRIPTION IS OFF THE KIT PAGE, 6 November. At $47 for two
+            bottles the kit is $23.50 a bottle and the subscription is $39.99,
+            so the alternative was worse on every axis: more per bottle, less
+            in the box, and a commitment. One-time only here.
 
-        <div className="kitDeal2">
-          {/* NOT "BEST VALUE". The welcome offer puts the first bottle at
-              $37.50 and this is $39.99, so for the order she is looking at
-              the one-time purchase is cheaper. What is true is the price she
-              keeps: see SUB_BEST_VALUE in kitCopy.ts. */}
-          <span className="kitDeal2Badge">{SUB_BEST_VALUE}</span>
-          <div className="kitDeal2Now">
-            <s className="kitWas">{money(ONE_MONTH_PRICE)}</s>
-            <span className="kitDeal2Num">{money(SUBSCRIBE_PRICE)}</span>
-            <span className="kitDeal2Per">{KIT_SUB_PER}</span>
-          </div>
-          {/* THE PILL IS BACK. Free shipping is the only thing this option
-              has that the bottle does not, and as words in a grey note it
-              read as small print. */}
-          <p className="kitDeal2Ship">
-            <span className="kitShip"><Truck /> {FREE_SHIPPING}</span>
-          </p>
-          <p className="kitDealNote kitSubLock">{subLockLine()}</p>
-          <p className="kitDealNote">{KIT_SUB_NOTE}</p>
-          {/* THE SAME BUTTON AS THE ONE ABOVE, 30 October. It was outlined,
-              which read as the lesser of the two rather than as the other
-              one, and David asked for them to match. */}
-          <a
-            className="cta kitBtn" href={sub} data-offer="subscribe"
-            onClick={() => track.checkout(outcome, SUBSCRIBE_PRICE, 'subscribe', 'kit-sub')}
-          >
-            {SUB_LABEL} <Arrow />
-          </a>
-        </div>
+            IT STAYS ON THE ONE-BOTTLE OFFER, where $39.99 a month against
+            $37.50 once is a real choice about what happens in month two. */}
+        {!isKit && (
+          <>
+            <div className="kitOr"><span>or</span></div>
+
+            <div className="kitDeal2">
+              <span className="kitDeal2Badge">{SUB_BEST_VALUE}</span>
+              <div className="kitDeal2Now">
+                <s className="kitWas">{money(ONE_MONTH_PRICE)}</s>
+                <span className="kitDeal2Num">{money(SUBSCRIBE_PRICE)}</span>
+                <span className="kitDeal2Per">{KIT_SUB_PER}</span>
+              </div>
+              <p className="kitDeal2Ship">
+                <span className="kitShip"><Truck /> {FREE_SHIPPING}</span>
+              </p>
+              <p className="kitDealNote kitSubLock">{subLockLine()}</p>
+              <p className="kitDealNote">{KIT_SUB_NOTE}</p>
+              <a
+                className="cta kitBtn" href={sub} data-offer="subscribe"
+                onClick={() => track.checkout(outcome, SUBSCRIBE_PRICE, 'subscribe', 'kit-sub')}
+              >
+                {SUB_LABEL} <Arrow />
+              </a>
+            </div>
+          </>
+        )}
 
         {/* TRUE, SAID ONCE, NO TIMER. Rendered here rather than through
             SHOW_BATCH_LINE, which is the global switch and is off for the
-            offer pages at David's request. */}
-        {KIT_BATCH_SHOWN && (
-          <p className="buyBatch kitBatch">
-            {isKit ? kitBatchLine() : bottleBatchLine()}
-          </p>
+            offer pages at David's request.
+
+            THE BOTTLE PAGE ONLY, since 6 November: David asked for the
+            kit's line, which counted kits rather than bottles, to come off
+            the page. */}
+        {!isKit && KIT_BATCH_SHOWN && (
+          <p className="buyBatch kitBatch">{bottleBatchLine()}</p>
         )}
 
         <div className="kitTrust">

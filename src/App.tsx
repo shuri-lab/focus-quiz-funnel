@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 import {
   BrowserRouter, MemoryRouter, Navigate, Route, Routes, useLocation, useParams,
 } from 'react-router-dom';
@@ -10,6 +10,7 @@ import { ANGLES, OFFER_ANGLES } from './lib/angles';
 import { initClarity, initMeta, pageView } from './lib/analytics';
 import { FIRST_STEP, STEP_SLUG } from './quiz/steps';
 import { REVIEW } from './review/flag';
+import { forceArm, getArm, subscribeArm, type OfferArm } from './lib/arm';
 
 /* A shared review page has no address bar of its own to route on, so it keeps
    its place in memory instead. */
@@ -59,7 +60,52 @@ function KnownAngle({ children }: { children: React.JSX.Element }) {
   return known ? children : <Navigate to="/" replace />;
 }
 
+/* ARTIFACT PREVIEW (review build only). A banner saying this is not live,
+   and every Shopify link opened in a new tab so the real checkout is seen
+   outside the preview frame. */
+const PREVIEW_LABEL = (import.meta.env.VITE_PREVIEW_LABEL as string | undefined) ?? '';
+/* Review build only: force an arm, so reviewers can see each offer. */
+const ARM_LABELS: [OfferArm, string][] = [
+  ['kit74', 'Kit $74.99'], ['bottle25', 'One bottle $37.50'], ['kit47', 'Kit $47 proposed'],
+];
+function ArmPicker() {
+  const arm = useSyncExternalStore(subscribeArm, () => getArm());
+  return (
+    <select aria-label="Offer to preview" value={arm}
+      onChange={(e) => forceArm(e.target.value as OfferArm)}
+      style={{ marginLeft: 8, font: 'inherit', fontSize: 12, padding: '1px 4px', borderRadius: 6 }}>
+      {ARM_LABELS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+    </select>
+  );
+}
+function PreviewBanner() {
+  return (
+    <div role="note" style={{
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, padding: '6px 12px',
+      background: '#241F2E', color: '#FFFFFF', font: '600 12.5px/1.35 Poppins, system-ui, sans-serif',
+      textAlign: 'center',
+    }}>
+      {PREVIEW_LABEL ? `${PREVIEW_LABEL}. ` : ''}Preview for review. Not live. Nothing you enter is sent.
+      <ArmPicker />
+    </div>
+  );
+}
+
 export default function App() {
+  /* A forced arm (review build) re-renders the whole app with that offer. */
+  useSyncExternalStore(subscribeArm, () => getArm());
+  useEffect(() => {
+    if (!REVIEW) return;
+    const onClick = (e: MouseEvent) => {
+      const a = (e.target as Element | null)?.closest?.('a[href^="https://shop."]') as HTMLAnchorElement | null;
+      if (!a) return;
+      e.preventDefault();
+      window.open(a.href, '_blank', 'noopener');
+    };
+    document.addEventListener('click', onClick, true);
+    return () => document.removeEventListener('click', onClick, true);
+  }, []);
+
   useEffect(() => {
     /* Attribution is captured in main.tsx, before the first render, because
        the cart links are built during render and an effect is too late. */
@@ -74,6 +120,7 @@ export default function App() {
 
   return (
     <Router>
+      {REVIEW && <PreviewBanner />}
       {/* The review bar used to sit here. Every screen has an address now,
           so jumping to one is a URL rather than a strip of buttons that ate
           two thirds of a phone screen and could never ship. */}

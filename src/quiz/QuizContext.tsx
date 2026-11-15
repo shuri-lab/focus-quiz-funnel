@@ -5,6 +5,7 @@ import {
   shouldSkip, type QuizState, type ScreenId,
 } from '../lib/logic';
 import { track } from '../lib/analytics';
+import { getArm } from '../lib/arm';
 import type { Angle } from '../lib/angles';
 import { QuizCtx, type QuizApi } from './context';
 import { FIRST_STEP, screenFromSlug, stepPath } from './steps';
@@ -175,8 +176,9 @@ export function QuizProvider({ angle, children }: { angle: Angle; children: Reac
       track.nurtureView(here, stateKey(latest.current));
     }
     /* BOTH OFFER ADDRESSES REPORT, so the A/B has two sides to compare. */
-    if (here === 'r2') track.offerView(stateKey(latest.current), 'bottle');
-    if (here === 'offerKit') track.offerView(stateKey(latest.current), 'kit');
+    if (here === 'r2') track.offerView(stateKey(latest.current), getArm() === 'bottle25' ? 'bottle' : 'kit');
+    /* /quiz/kit renders the one-bottle page (R2OneBottle), so it reports the bottle. */
+    if (here === 'offerKit') track.offerView(stateKey(latest.current), 'bottle');
     if (here === 'rDoc') track.doctorRoute(docReason(latest.current));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [here]);

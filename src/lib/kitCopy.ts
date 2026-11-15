@@ -18,8 +18,9 @@
  */
 import {
   BATCH_ON_SHELF, KIT_BUY_CTA, KIT_DISCOUNT_NOTE, NEXT_BATCH, ONE_MONTH_PRICE,
-  PLAN_NAME, SINGLE_AFTER_DISCOUNT, SINGLE_DISCOUNT_PERCENT, SUBSCRIBE_PRICE,
-  batchCount, dailyPrice, money,
+  PLAN_NAME, QUIZ_KIT_VALUE_NUM_TOTAL, kitToday, isKit47,
+  SINGLE_AFTER_DISCOUNT,
+  SINGLE_DISCOUNT_PERCENT, SUBSCRIBE_PRICE, batchCount, dailyPrice, money,
 } from './offer';
 import { MG_HEADLINE } from './offerCopy';
 import type { SymptomId } from './logic';
@@ -253,7 +254,7 @@ export const HERO_HEAD: Record<SymptomId, string> = {
 };
 
 /** When she named nothing, which is every woman who opens this page cold. */
-export const HERO_HEAD_DEFAULT = 'Feel like YOU again.';
+export const HERO_HEAD_DEFAULT = 'Feel like you again.';
 
 /**
  * How it works, and how little it asks of her.
@@ -488,7 +489,7 @@ export const HOW_BODY =
 
 export const OFFER_CARD_HEAD = PLAN_NAME;
 export const OFFER_CARD_SUB =
-  'One bottle of Hormone Focus, 60 capsules, two a day, and three guides.';
+  'Two bottles of Hormone Focus, 60 days of capsules, and three guides.';
 
 /** Under the two options, where the risk comes off. */
 export const OFFER_ONCE_NOTE = KIT_DISCOUNT_NOTE;
@@ -532,7 +533,8 @@ export const KIT_HERO_LABEL = PLAN_NAME;
  * this is that name as a sentence, which is the argument for it. A product
  * name is not a claim; a sentence promising a result by a date is.
  */
-export const KIT_HERO_HEAD = 'Feel like YOU again in 60 days.';
+/* Direction 2 (Jane, 11 Nov): no timeframe in the headline. */
+export const KIT_HERO_HEAD = 'Feel like you again.';
 
 /**
  * The same line with her name on the front.
@@ -541,13 +543,29 @@ export const KIT_HERO_HEAD = 'Feel like YOU again in 60 days.';
  * again" reads as an instruction to somebody called Dana. The result page
  * addresses her the same way, "Dana, here is your result".
  */
-export const kitHeroHead = (name: string): string =>
-  (name ? `${name}, feel like YOU again in 60 days.` : KIT_HERO_HEAD);
+export function kitHeroHead(raw: string): string {
+  const name = raw.trim();
+  /* FALLS BACK UNLESS IT STARTS WITH A LETTER. A name box collects spaces,
+     an empty string, an emoji and the occasional "1", and ", feel like YOU
+     again" is worse than no name at all. The unicode class rather than A-Z,
+     so Ana and Zoë are names and 7 is not. */
+  if (!/^\p{L}/u.test(name)) return KIT_HERO_HEAD;
+
+  /* HER FIRST NAME, AND ONLY ITS FIRST LETTER CAPITALISED.
+     The rest is left as she typed it, so McKenna and O'Neill survive, EXCEPT
+     when she typed the whole thing in capitals: "DANA, feel like YOU again"
+     shouts her name back at her, and caps lock on a name field is a habit
+     rather than a spelling. */
+  const first = name.split(/\s+/)[0];
+  const body = first === first.toUpperCase() ? first.toLowerCase() : first;
+  const shown = body.charAt(0).toUpperCase() + body.slice(1);
+  return `${shown}, feel like you again.`;
+}
 /* "No crash diets, no willpower, no guessing" came off on 6 November. The
    sentence ends on what the kit gives her rather than on three things it is
    not, and the hero is one line shorter for it. */
 export const KIT_HERO_SUB =
-  'Hormone Focus, plus a day-by-day plan, recipes, and tracker that tell you '
+  'Hormone Focus, plus JJ’s 60-day plan, recipes, and tracker that tell you '
   + 'exactly what to do.';
 
 /* THE PRICE BLOCK, 29 October, replacing a sentence.
@@ -616,12 +634,13 @@ export const subLockLine = (): string =>
  * NOT SHOW_BATCH_LINE, which is the global switch and is off at David's
  * request. Flipping it would turn this on for /offer, /offer/:slug, /live
  * and /plan as well, which this brief does not ask for. It is rendered
- * locally instead, and says "kits" where offerCopy's batchLine says
- * "bottles", because that is what this page is selling.
+ * locally instead, on the bottle page only.
+ *
+ * THE KIT'S OWN LINE IS GONE, 6 November, at David's instruction. It read
+ * "This batch: 2,280 kits on the shelf. The next batch lands in December."
+ * and kitBatchLine went with it; bottleBatchLine, which is the one still
+ * rendered, is further down this file.
  */
-export const kitBatchLine = (): string =>
-  `This batch: ${batchCount()} kits on the shelf. `
-  + `The next batch lands in ${NEXT_BATCH}.`;
 
 /** Guards the line against a count that would read as a going-out-of-stock. */
 export const KIT_BATCH_SHOWN = BATCH_ON_SHELF > 0;
@@ -629,6 +648,97 @@ export const KIT_BATCH_SHOWN = BATCH_ON_SHELF > 0;
 /* -- the ingredients, and the closer ------------------------------------- */
 
 export const KIT_CLOSE_HEAD = 'Your kit can be on its way today.';
+
+/* ------------------------------------------- the kit's two anchors ----- */
+
+/**
+ * WHAT $47 IS NEXT TO, and why she is being offered it.
+ *
+ * The first is the comparison that makes the number land: two bottles and
+ * three guides for less than one bottle costs on its own. It is arithmetic
+ * on constants in this file, not a claim.
+ *
+ * The second is the reason-why, and it is the line that keeps $47 from
+ * undercutting JJ's own site: this price belongs to the Hormone Check, not
+ * to the store. Same fact as the one-bottle page's welcome line, and it goes
+ * stale the same way, on the day a site-wide sale runs.
+ *
+ * DRAFT FOR JANE, both.
+ */
+/* THE TWO LINES BECAME TWO CARDS, 6 November. They said the right thing and
+   read as small print under a button; the comparison is the argument, so it
+   is shown rather than described. kitLessThanOne and kitReasonWhy are gone;
+   what follows is what replaced them. */
+
+/** The pill over the price, mirroring the bottle page's WELCOME OFFER. */
+export const KIT_OFFER_PILL = 'Your Hormone Check offer';
+
+/**
+ * THE BUTTONS THAT SCROLL, NOT THE ONES THAT BUY. 6 November.
+ *
+ * The hero button and the sticky bar do not go to checkout: they move her
+ * down to the offer. Both read "Get my Kit", which asks her to buy before
+ * she has seen what is in it. At that moment she wants to look, so the ask
+ * is to look.
+ *
+ * The two that DO go to Shopify, the deal box and the closer, keep "Get my
+ * Kit": there the ask is the right one.
+ */
+export const KIT_SEE_CTA = 'See everything included';
+
+/** Under the kit's price, in money rather than in percent. */
+export const kitSaving = (): string =>
+  `You save ${money(QUIZ_KIT_VALUE_NUM_TOTAL - kitToday())} today`;
+
+/* -- the steal, as two cards -------------------------------------------- */
+
+export const COMPARE_ONE_LABEL = 'One bottle';
+export const COMPARE_ONE_SUB = 'the usual price';
+export const COMPARE_KIT_LABEL = 'Your kit';
+export const COMPARE_KIT_SUB = '2 bottles + plan, recipes & tracker';
+export const COMPARE_RIBBON = 'Less than one bottle';
+/* "$47.00 today" on one line wrapped on a 320px phone, which left the two
+   cards' prices on different baselines and read as a mistake. The word is a
+   caption under the number now, so the break is the one we chose. */
+export const compareKitPrice = (): string => money(kitToday());
+export const COMPARE_KIT_TODAY = 'today';
+
+/**
+ * THE FRAMING, ABOVE THE CARDS. 6 November.
+ *
+ * It was one line under them, which meant she met two prices and worked out
+ * what they were for afterwards. David asked for the argument first and the
+ * evidence second, which is the order it would be made in out loud.
+ *
+ * THE BRIEF'S EM DASHES ARE COMMAS. House style has had none since 29
+ * October and the gate fails the build over one.
+ */
+export const COMPARE_HEAD =
+  'Two bottles and the whole plan, for less than one bottle.';
+/* The offer switch: at $74.99 the Kit is compared with two bottles. */
+export const COMPARE_HEAD_74 =
+  'Two bottles and the whole plan, for less than two bottles on their own.';
+export const compareHead = (): string => (isKit47() ? COMPARE_HEAD : COMPARE_HEAD_74);
+export const compareRibbon = (): string => (isKit47() ? COMPARE_RIBBON : 'Less than two bottles');
+export const compareOneLabel = (): string => (isKit47() ? COMPARE_ONE_LABEL : 'Two bottles');
+export const compareOnePrice = (): number => (isKit47() ? ONE_MONTH_PRICE : ONE_MONTH_PRICE * 2);
+
+/**
+ * Both prices are read off the constants rather than typed.
+ *
+ * The brief wrote "$47 today" and the card under it says "$47.00". One of
+ * them had to give, and it is the prose: two spellings of the same number,
+ * four lines apart, read as two numbers.
+ */
+export const compareSub = (): string =>
+  (isKit47()
+    ? `One bottle of ${HF_NAME} usually costs ${money(ONE_MONTH_PRICE)}. `
+    : `Two bottles of ${HF_NAME} usually cost ${money(ONE_MONTH_PRICE * 2)}. `)
+  + 'Your kit, two bottles plus the plan, recipes, and tracker, '
+  + `is ${money(kitToday())} today.`;
+
+/** Still under the cards: the small line that says why she sees this price. */
+export const COMPARE_WHY = 'Your Hormone Check price.';
 
 /**
  * The kit shot's alt text.
@@ -639,7 +749,7 @@ export const KIT_CLOSE_HEAD = 'Your kit can be on its way today.';
  * it loads.
  */
 export const KIT_SHOT_ALT =
-  'The Feel Like YOU Again Kit: one bottle of Hormone Focus, '
+  'The 60-Day Feel Like You Again Kit: two bottles of Hormone Focus, '
   + 'The 60-Day Hormone Fix, Hormone Healthy Recipes and the Daily Symptom Tracker';
 
 /* ------------------------------------- the one-bottle offer, variant B -- */
