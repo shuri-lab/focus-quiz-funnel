@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuiz } from '../context';
 import { Screen, ScreenTitle } from '../../components/Screen';
@@ -6,6 +6,8 @@ import { OkendoWall } from '../../components/OkendoWall';
 import { VideoWall } from '../../components/VideoWall';
 import { mainConcern, stateKey } from '../../lib/logic';
 import { OFFER_DISCLAIMER } from '../../lib/content';
+/* The anchor the VSL screen's button scrolls to. */
+import { OFFER_HEAD_ID, OFFER_HERO_ID } from '../../lib/vsl';
 /* KIT_PIECES, KIT_PIECE_IDS, KIT_PIECES_TITLE and KIT_FOCUS_CLAIM are no
    longer imported. The "What's inside" rows were the same four things the
    kit card's own value stack already lists, with prices, directly under a
@@ -113,10 +115,44 @@ const stageOf = (outcome: string): Stage =>
  * bar, is the same markup for both, which is the whole reason this is one
  * component and not two pages.
  */
-export function R2({ variant = 'kit', screen = 'r2' }: {
+/**
+ * The hero headline, which is the screen's h1 on its own address and a plain
+ * h2 inside the VSL screen, where the heading above it is the h1.
+ *
+ * Declared here rather than inside R2 so its identity is stable across
+ * renders: a component defined in a render body is a new type every time,
+ * and React remounts what it wraps.
+ */
+function HeroH1(
+  { embedded, className, children }:
+  { embedded: boolean; className?: string; children: ReactNode },
+) {
+  /* The id is on both, so the VSL screen's button has something to aim at
+     and /quiz/your-kit is unchanged by carrying it. */
+  return embedded
+    ? <h2 id={OFFER_HEAD_ID} className={className}>{children}</h2>
+    : <ScreenTitle id={OFFER_HEAD_ID} className={className}>{children}</ScreenTitle>;
+}
+
+export function R2({ variant = 'kit', screen = 'r2', embedded = false }: {
   variant?: 'bottle' | 'kit';
   /** Which address rendered it, so <Screen> keys its focus reset correctly. */
   screen?: 'r2' | 'offerKit';
+  /**
+   * RENDERED INSIDE ANOTHER SCREEN, 14 November, for the VSL step.
+   *
+   * Three things change, and nothing else does:
+   *  - no <Screen> wrapper. Screen resets the scroll and moves focus on
+   *    mount, and two of them on one page fight each other.
+   *  - no proof rail. The screen above places PressRail and PhotoRail in
+   *    the order David asked for; this one would show them twice.
+   *  - the hero headline is an h2 and not the screen heading, because a
+   *    page has one h1 and the screen above owns it.
+   *
+   * Default false, so /quiz/your-kit, /quiz/kit and the offer pages render
+   * exactly as they did before this prop existed.
+   */
+  embedded?: boolean;
 } = {}) {
   const isKit = variant === 'kit';
   const { S, angle } = useQuiz();
@@ -145,6 +181,9 @@ export function R2({ variant = 'kit', screen = 'r2' }: {
    * now, the way Jane's landing page does it. */
   const offer = useRef<HTMLDivElement>(null);
   const foot = useRef<HTMLParagraphElement>(null);
+  /* The anchor the VSL screen's button scrolls to, and what the sticky bar
+     measures when this block is embedded in it. */
+  const hero = useRef<HTMLElement>(null);
   const [sticky, setSticky] = useState(false);
 
   useEffect(() => {
@@ -159,7 +198,13 @@ export function R2({ variant = 'kit', screen = 'r2' }: {
        button, so the bar has nothing to add until the hero has gone: at 0.75
        it arrived while the hero CTA was still on screen and offered her the
        same thing twice. */
-    const SCROLLED_PAST_THE_HERO = () => window.scrollY > window.innerHeight;
+    /* EMBEDDED, THE HERO IS NOT THE TOP OF THE PAGE. One viewport down from
+       the top of the VSL screen is somewhere in the middle of the video, so
+       the measurement has to be the hero itself rather than the scroll
+       position. Unembedded it is the expression it has always been. */
+    const SCROLLED_PAST_THE_HERO = () => (embedded
+      ? (hero.current?.getBoundingClientRect().bottom ?? 1) < 0
+      : window.scrollY > window.innerHeight);
 
     const update = () => setSticky(
       SCROLLED_PAST_THE_HERO()
@@ -181,8 +226,13 @@ export function R2({ variant = 'kit', screen = 'r2' }: {
     block: 'start',
   });
 
-  return (
-    <Screen id={screen}>
+  /* THE BODY FIRST, THEN THE WRAPPER AROUND IT.
+     Not a <Frame> component declared in here: that would be a new component
+     identity on every render, so React would throw this whole subtree away
+     and rebuild it each time the sticky bar toggled, losing the FAQ's open
+     panel and restarting every image. */
+  const body = (
+    <>
       {/* ------------------------------------------------- 1. the hero ----
           THE KIT, NOT THE BOTTLE, from 29 October. Her stage, the package by
           name, what is in it, the picture of all four pieces, the rating,
@@ -193,18 +243,19 @@ export function R2({ variant = 'kit', screen = 'r2' }: {
           brief's headline sells the package instead. She is still read back
           twice on this page: the eyebrow is her stage, and "why it works"
           below opens on the symptom she named. */}
-      <section className="kitHero">
+      <section className="kitHero" id={OFFER_HERO_ID} ref={hero}>
         {/* THREE, NOT FOUR. The kit's name sat on its own plum line between
             the eyebrow and the headline, which made four stacked lines before
             she reached the picture. The name is in the headline now. */}
         <p className="kitHeroEyebrow">{HERO_EYEBROW[stageOf(outcome)]}</p>
-        <ScreenTitle className="kitHeroH1">
+        {/* One h1 per page: embedded, the screen above owns it. */}
+        <HeroH1 embedded={embedded} className="kitHeroH1">
           {/* HER NAME ON THE KIT'S HEADLINE, 6 November. She gave it at the
               email gate; a woman who came from JJ's list skipped that screen
               and has none, so the line stands on its own for her. The
               bottle page is unchanged. */}
           {isKit ? kitHeroHead(S.name.trim()) : BOTTLE_HERO_HEAD}
-        </ScreenTitle>
+        </HeroH1>
         <p className="kitHeroSub">{isKit ? KIT_HERO_SUB : BOTTLE_HERO_SUB}</p>
 
         {/* 4:3, WHERE THE BOTTLE WAS SQUARE, and it carries its own name,
@@ -269,14 +320,19 @@ export function R2({ variant = 'kit', screen = 'r2' }: {
           their own words with a way down to all of them, then the press.
           Three sections rather than one so each keeps the padding and the
           overflow behaviour it already had. */}
-      <section className="kitBand surface kitStrip" data-proof="rail">
-        <PhotoRail />
-        {/* DIRECTLY UNDER THE WOMEN, 29 October. The press logos were a
-            section of their own below the review teaser, which put two
-            screens between "here are the women" and "here is where you have
-            seen us". They are one proof block, so they sit together. */}
-        <PressRail />
-      </section>
+      {/* NOT WHEN EMBEDDED: the VSL screen puts these two above the hero,
+          in the order David asked for, and two of each is worse than none. */}
+      {!embedded && (
+        <section className="kitBand surface kitStrip" data-proof="rail">
+          <PhotoRail />
+          {/* DIRECTLY UNDER THE WOMEN, 29 October. The press logos were a
+              section of their own below the review teaser, which put two
+              screens between "here are the women" and "here is where you
+              have seen us". They are one proof block, so they sit
+              together. */}
+          <PressRail />
+        </section>
+      )}
 
       <section className="kitSec kitTeaser" data-proof="teaser">
         <h2 className="kitH2">{TEASER_HEAD}</h2>
@@ -513,6 +569,8 @@ export function R2({ variant = 'kit', screen = 'r2' }: {
           </button>
         </div>
       ), document.body)}
-    </Screen>
+    </>
   );
+
+  return embedded ? body : <Screen id={screen}>{body}</Screen>;
 }

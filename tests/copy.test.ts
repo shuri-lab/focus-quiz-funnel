@@ -32,6 +32,7 @@ import * as kit from '../src/lib/kitCopy';
 import * as quiz from '../src/lib/content';
 import * as result from '../src/lib/resultCopy';
 import * as nurture from '../src/lib/nurtureCopy';
+import * as vsl from '../src/lib/vslCopy';
 /* The claim patterns and the export walker moved to tests/claimRules.ts on
    7 October 2026, unchanged, so the results tests can hold one string to the
    same gate. This file is still what reads every authored string. */
@@ -54,6 +55,9 @@ const AUTHORED: [string, string][] = [
   /* The three pre-offer screens, 29 October 2026: what is behind her result,
      what to do about it, and the product as step one of that. */
   ...strings(nurture, 'nurtureCopy.ts'),
+  /* The VSL screen, 14 November 2026: the headline over JJ's video and the
+     button under it. Placeholders, and gated like everything else. */
+  ...strings(vsl, 'vslCopy.ts'),
 ];
 
 /**

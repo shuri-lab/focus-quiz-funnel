@@ -214,11 +214,18 @@ export function stateKey(S: QuizState): Outcome {
 
 /* --------------------------------------------------------------- flow ---- */
 
+/* The one switch behind the VSL step. vsl.ts imports nothing, so reading it
+   here cannot cycle back through the screens that read this file. */
+import { VSL_FLOW } from './vsl';
+
+
 export type ScreenId =
   | 'q1' | 'q2' | 'q3' | 'q4' | 'q4b' | 'q5' | 'q6' | 'q7'
   | 'stat'
   | 'load' | 'gate'
   | 'r1' | 'cause' | 'plan' | 'meet' | 'r2' | 'rDoc'
+  /** The video from JJ, with the whole offer under it. See vsl.ts. */
+  | 'vsl'
   /**
    * THE KIT OFFER, KEPT OUT OF THE FLOW. 2 November 2026.
    *
@@ -250,13 +257,28 @@ export type ScreenId =
    page, which now carries her 60-day plan. */
 export const CUT: ScreenId[] = ['q5', 'q7', 'cause', 'meet'];
 
+/**
+ * EVERY SCREEN THE WALK KNOWS ABOUT, in order, both flows at once.
+ *
+ * THE VSL STEP IS IN HERE RATHER THAN SWAPPED IN. David, 14 November, asked
+ * for the change to be one boolean to undo, so nothing is removed to make
+ * room for it: `vsl` sits after the result, `plan` and `r2` keep their
+ * places after it, and shouldSkip steps over whichever pair the flag does
+ * not want. Both flows are therefore the same array read two ways, and
+ * every screen stays addressable whichever way it is set.
+ */
 export const FLOW: ScreenId[] = [
   'q1', 'q2', 'q3', 'q4', 'q4b', 'q6',
   /* One transition screen (Jane, 11 Nov): why it has been hard to get help. */
   'stat',
   'load', 'gate',
   /* The result explains; the plan page sells (Jane, 11 Nov). */
-  'r1', 'plan', 'r2', 'rDoc',
+  'r1',
+  /* VSL_FLOW on: the video and the offer, and the walk ends here. */
+  'vsl',
+  /* VSL_FLOW off: the walk she takes today. */
+  'plan', 'r2',
+  'rDoc',
 ];
 
 /** The seven she is told about. */
@@ -275,12 +297,13 @@ export const QUESTION_NUMBER: Partial<Record<ScreenId, number>> = {
   q1: 1, q2: 2, q3: 3, q4: 4, q4b: 4, q6: 5, stat: 5,
 };
 
-/** The five result pages: her result, the three that earn the offer, the offer. */
-export const REVEAL: ScreenId[] = ['r1', 'plan', 'r2'];
+/** The result pages, so the segmented bar keeps filling to the end of the
+ *  walk she is actually on. Two in the VSL flow, three in the other. */
+export const REVEAL: ScreenId[] = VSL_FLOW ? ['r1', 'vsl'] : ['r1', 'plan', 'r2'];
 
 /** Everything between the cycle questions and rDoc. A doctor-route state sees none of it. */
 const AFTER_CYCLE: ScreenId[] = [
-  'q6', 'stat', 'load', 'gate', 'r1', 'plan', 'r2',
+  'q6', 'stat', 'load', 'gate', 'r1', 'vsl', 'plan', 'r2',
 ];
 
 /**
@@ -333,6 +356,16 @@ export function doctorExit(S: QuizState): boolean {
 export function shouldSkip(S: QuizState, id: ScreenId): boolean {
   /* One symptom needs no ranking. */
   if (CUT.includes(id)) return true;
+
+  /* THE VSL FLOW, AND THE ONE IT REPLACES. See vsl.ts. The flag decides
+     which half of the post-result flow she walks; the other half is still
+     in FLOW, still in SCREENS and still at its own address.
+
+     BOTH ARE THE OFFER, so both answer to seesOffer: a woman the quiz sends
+     to her doctor must not be walked into a sales video any more than she
+     may be walked into the price. */
+  if (id === 'vsl') return !VSL_FLOW || !seesOffer(S);
+  if (VSL_FLOW && (id === 'plan' || id === 'r2')) return true;
   if (id === 'q2') return S.sym.length < 2;
   if (id === 'q4b') return S.cycle !== 'stopped';
   if ((doctorExit(S) || kindExit(S)) && AFTER_CYCLE.includes(id)) return true;

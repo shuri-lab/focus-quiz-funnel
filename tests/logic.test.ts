@@ -16,6 +16,8 @@ import {
   OFFER_OUTCOMES, QUESTION_NUMBER, QUESTION_TOTAL,
   type QuizState, type Age, type Cycle, type Twelve, type ScreenId, type Outcome,
 } from '../src/lib/logic';
+/* The post-result flow is one boolean wide: see vsl.ts. */
+import { VSL_FLOW } from '../src/lib/vsl';
 
 /* ------------------------------------------------------ the input space -- */
 
@@ -267,7 +269,9 @@ test('everyone else sees her result and then the kit, and never the doctor scree
     expect(seen, label(S)).toContain('gate');
     expect(seen, label(S)).toContain('r1');
     expect(seesOffer(S), label(S)).toBe(true);
-    expect(seen[seen.length - 1], label(S)).toBe('r2');
+    /* The walk ends on whatever the flow sells: the VSL screen carries the
+       offer inside it, so it is the last step when the flag is on. */
+    expect(seen[seen.length - 1], label(S)).toBe(VSL_FLOW ? 'vsl' : 'r2');
     expect(new Set(seen).size, 'no screen repeats: ' + label(S)).toBe(seen.length);
   }
 });
@@ -348,7 +352,9 @@ test('Direction 2: the cut screens are never walked, and the result goes straigh
   for (const S of combinations()) {
     const seen = path(S);
     for (const id of CUT) expect(seen, `${label(S)} walks cut ${id}`).not.toContain(id);
-    if (seen.includes('r1')) expect(seen[seen.indexOf('r1') + 1], label(S)).toBe('plan');
+    if (seen.includes('r1')) {
+      expect(seen[seen.indexOf('r1') + 1], label(S)).toBe(VSL_FLOW ? 'vsl' : 'plan');
+    }
   }
 });
 
@@ -407,8 +413,8 @@ test('forward and back from an off-flow screen go nowhere, not to question one',
   expect(nextId(S, 'offerKit'), 'forward from the kit page').toBeUndefined();
   expect(prevId(S, 'offerKit'), 'back from the kit page').toBeUndefined();
   /* And the screens that ARE in the flow still move. */
-  expect(nextId(S, 'r1')).toBe('plan');
-  expect(prevId(S, 'plan')).toBe('r1');
+  expect(nextId(S, 'r1')).toBe(VSL_FLOW ? 'vsl' : 'plan');
+  expect(prevId(S, VSL_FLOW ? 'vsl' : 'plan')).toBe('r1');
 });
 
 test('Direction 2: the stat screen, then load; result, plan, then the Kit page', () => {
@@ -418,6 +424,14 @@ test('Direction 2: the stat screen, then load; result, plan, then the Kit page',
   expect(at('q6')).toBeLessThan(at('stat'));
   expect(at('q7')).toBe(-1);
   expect(at('stat')).toBeLessThan(at('load'));
-  expect(at('r1')).toBeLessThan(at('plan'));
-  expect(at('plan')).toBeLessThan(at('r2'));
+  /* After the result: her plan and then the Kit, or the one screen that
+     holds the video and the Kit together. Which one is VSL_FLOW. */
+  if (VSL_FLOW) {
+    expect(at('r1')).toBeLessThan(at('vsl'));
+    expect(at('plan'), 'plan is stepped over, not walked').toBe(-1);
+    expect(at('r2'), 'the offer is inside the VSL screen').toBe(-1);
+  } else {
+    expect(at('r1')).toBeLessThan(at('plan'));
+    expect(at('plan')).toBeLessThan(at('r2'));
+  }
 });
