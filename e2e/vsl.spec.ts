@@ -89,9 +89,12 @@ test.describe('the welcome video', () => {
     await expect(frame, 'the player never mounted').toHaveCount(1);
     const src = await frame.getAttribute('src');
     expect(src).toContain('loom.com/embed/96d46768d238486f8bbcad8e9b0594d7');
-    for (const p of ['hide_owner=true', 'hide_share=true', 'hide_title=true',
-      'hideEmbedTopBar=true']) {
-      expect(src, `${p} was dropped`).toContain(p);
+    /* EVERY VIEW STARTS AT 0:00. Loom resumes where a viewer left off, so
+       without this she can press play and land mid sentence. */
+    expect(src, 'the video can resume mid sentence').toContain('t=0');
+    /* THE CHROME PARAMETERS STAY OFF: they stopped the player playing. */
+    for (const p of ['hide_owner', 'hide_share', 'hide_title', 'hideEmbedTopBar']) {
+      expect(src, `${p} is back, and it breaks play`).not.toContain(p);
     }
     /* NOT AUTOPLAYED: she taps play. See vsl.ts. */
     expect(src, 'the video starts itself').not.toContain('autoplay=1');

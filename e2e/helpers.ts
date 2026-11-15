@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test';
+import { VSL_FLOW } from '../src/lib/vsl';
 
 /** Nothing may ever stick out sideways. This is the whole mobile contract. */
 export async function expectNoHorizontalOverflow(page: Page, where: string) {
@@ -92,6 +93,34 @@ export const pressSecondary = (page: Page) => () => page.locator('.actionBar .ct
  * through, so a plan that silently stops rendering fails here rather than
  * surfacing as a confusing timeout on the offer page.
  */
+/**
+ * FROM THE RESULT ONTO THE PLAN PAGE, whichever flow is switched on.
+ *
+ * With VSL_FLOW the walk goes result -> welcome-video and the plan page is
+ * not a step in it. The page still exists and is still at its own address,
+ * and what these tests check is what it SAYS, so they open it directly
+ * rather than pressing a button that now leads somewhere else.
+ */
+export async function toPlanPage(page: Page) {
+  if (VSL_FLOW) { await page.goto('/quiz/your-plan'); return; }
+  await page.locator('.actionBar .cta').first().click();
+}
+
+/**
+ * ONTO THE SCREEN THE WALK ENDS ON, whichever flow is switched on.
+ *
+ * With VSL_FLOW that is the video screen, which carries the offer inside
+ * it; without it, /quiz/your-kit. Either way the caller is about to make a
+ * claim about the OFFER, and this is where the offer is.
+ */
+export async function toOfferScreen(page: Page) {
+  if (VSL_FLOW) { await page.goto('/quiz/welcome-video'); return; }
+  await page.locator('.actionBar .cta').first().click();
+}
+
+/** The offer's hero headline, which is an h2 when the video screen owns the h1. */
+export const offerHead = (page: Page) => page.locator('#offer-head');
+
 export async function throughPlan(page: Page, title: string) {
   /* Plan v13: "Dana, your personal 60-day plan for ...". Callers pass the
      old "Your 60-day plan for ..." form; match the part that is hers. */

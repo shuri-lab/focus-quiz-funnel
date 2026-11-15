@@ -26,11 +26,27 @@ export const VSL_FLOW = true;
 /**
  * The Loom embed.
  *
- * The four query parameters strip Loom's own chrome: the owner's name, the
- * share button, the title and the top bar. What they cannot strip is Loom's
- * branding inside the player itself, and what they cannot give us is the
- * playback position: the iframe is cross-origin, so there is no timeupdate
- * and no honest 25/50/75/complete. See track.vslPlay in analytics.ts.
+ * THE CHROME PARAMETERS ARE GONE, 14 November. hide_owner, hide_share,
+ * hide_title and hideEmbedTopBar tidied the player up and stopped it
+ * playing: David pressed play and nothing happened. A plain player that
+ * plays beats a tidy one that does not, so this is the embed URL Loom
+ * itself hands out, which is what he sent through.
+ *
+ * t=0 IS THE ONE PARAMETER THAT STAYS. Loom resumes where a viewer left
+ * off, so a woman who came back to the page, or who had the start of it
+ * buffered, would press play and drop into the middle of JJ's sentence.
+ * Every view starts at 0:00.
+ *
+ * WHAT WE STILL CANNOT MEASURE: the iframe is cross-origin, so there is no
+ * timeupdate and no honest 25/50/75/complete. See track.vslPlay.
+ *
+ * THE 1.2x SPEED IS NOT OURS TO SET. David asked for 1x on 14 November.
+ * Loom plays every embed at 1.2x by default and no query parameter changes
+ * it: speed, playbackRate and hide_speed were each measured against the
+ * live player and all three came back at 1.2. The parent page cannot reach
+ * it either, the iframe being cross-origin. It is a per-video setting in
+ * Loom's own dashboard, under Video Settings, and David has to flip it
+ * there. See the e2e note in vsl.spec.ts.
  *
  * NOT AUTOPLAYED, deliberately. Muted autoplay inside a cross-origin iframe
  * is unreliable on iOS and a video that starts itself with no sound is a
@@ -38,9 +54,7 @@ export const VSL_FLOW = true;
  */
 export const VSL_LOOM_ID = '96d46768d238486f8bbcad8e9b0594d7';
 
-export const VSL_EMBED_URL =
-  `https://www.loom.com/embed/${VSL_LOOM_ID}`
-  + '?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true';
+export const VSL_EMBED_URL = `https://www.loom.com/embed/${VSL_LOOM_ID}?t=0`;
 
 /** 4:5, upright, because she is holding a phone. */
 export const VSL_ASPECT = '125%';

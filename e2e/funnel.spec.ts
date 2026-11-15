@@ -1,13 +1,15 @@
 import { test, expect } from '@playwright/test';
 import {
   expectNoHorizontalOverflow, expectTapTargets, startQuiz, heading, blockKlaviyo,
-  answerAndWait, pickOption, pressPrimary, switchOffers, throughPlan,
+  answerAndWait, pickOption, pressPrimary, switchOffers, throughPlan, toPlanPage, toOfferScreen, offerHead,
 } from './helpers';
 import { COVER_SUB } from '../src/lib/content';
+/* The post-result walk is one boolean wide: see src/lib/vsl.ts. */
+import { VSL_FLOW } from '../src/lib/vsl';
 import { KIT_HERO_HEAD } from '../src/lib/kitCopy';
 import {
-  GATE_LINE, LOAD_CARDS, PLAN_BOTTLE_CTA, PLAN_BOTTLE_WHY, PLAN_TO_KIT_CTA, RESULT_CASE,
-  RESULT_PILL, RESULT_TO_PLAN_V5, STAT_TITLE,
+  GATE_LINE, LOAD_CARDS, PLAN_BOTTLE_CTA, PLAN_BOTTLE_WHY, PLAN_TO_KIT_CTA, RESULT_CASE, RESULT_CASE_VSL,
+  RESULT_PILL, RESULT_TO_PLAN_V5, RESULT_TO_VSL, STAT_TITLE,
 } from '../src/lib/resultCopy';
 
 /* The statistic screen's headline, as a pattern for answerAndWait. */
@@ -209,7 +211,9 @@ test.describe('the quiz', () => {
     await expect(page.locator('.resStatBigLabel'))
       .toHaveText('is how long perimenopause usually lasts. It often starts in your 40s.');
     await expect(page.locator('.resStat')).toContainText('Source: Cleveland Clinic');
-    await expect(page.locator('.resHandoff')).toHaveText(RESULT_CASE);
+    /* The paragraph follows the flow: a plan, or a video from JJ. */
+    await expect(page.locator('.resHandoff'))
+      .toHaveText(VSL_FLOW ? RESULT_CASE_VSL : RESULT_CASE);
     await expectNoHorizontalOverflow(page, 'r1 result');
 
     /* It is one answer, and still nothing to buy. */
@@ -221,8 +225,11 @@ test.describe('the quiz', () => {
     /* The doctor line belongs to early menopause only, and she is B. */
     await expect(page.getByText('take to your doctor soon', { exact: false })).toHaveCount(0);
 
-    await expect(page.locator('.actionBar .cta')).toContainText(RESULT_TO_PLAN_V5);
-    await page.locator('.actionBar .cta').click();
+    /* The button names the screen it opens, which is the video or her
+       plan depending on the flow. See src/lib/vsl.ts. */
+    await expect(page.locator('.actionBar .cta'))
+      .toContainText(VSL_FLOW ? RESULT_TO_VSL : RESULT_TO_PLAN_V5);
+    await toPlanPage(page);
 
     /* HER PLAN, new in Quiz V1: titled for her own symptoms, four steps,
        step one keyed to the one she named, and what she tried read back.
@@ -253,12 +260,15 @@ test.describe('the quiz', () => {
     await expect(page.locator('a[href*="shop.jjsmithonline.com"]')).toHaveCount(0);
     await expect(page.locator('.actionBar .cta')).toContainText(PLAN_BOTTLE_CTA);
     await expectNoHorizontalOverflow(page, 'your-plan');
-    await page.locator('.actionBar .cta').click();
+    await toOfferScreen(page);
 
-    /* THE OFFER. The walk ends at /quiz/your-kit, which shows her arm's
-       offer, and every visitor's arm is the one bottle at 25% off. */
-    await expect(page).toHaveURL(/\/quiz\/your-kit$/);
-    await expect(heading(page)).toHaveText('Hormone Focus, your daily support');
+    /* THE OFFER, which shows her arm's offer, and every visitor's arm is
+       the one bottle at 25% off. It is the last screen of the walk either
+       way: /quiz/welcome-video with the video in front of it, and
+       /quiz/your-kit without. */
+    await expect(page)
+      .toHaveURL(VSL_FLOW ? /\/quiz\/welcome-video$/ : /\/quiz\/your-kit$/);
+    await expect(offerHead(page)).toHaveText('Hormone Focus, your daily support');
     await expect(page.locator('.kitHeroSub'))
       .toHaveText('Two capsules a day to help your body clear the extra estrogen, '
         + 'the first step to feeling like you again.');
@@ -280,7 +290,13 @@ test.describe('the quiz', () => {
       .toHaveText('60-day money-back guarantee · Ships today');
     await expect(page.locator('.kitHero'), 'no free shipping above the fold')
       .not.toContainText('Free shipping');
+    /* THE FOLD IS A CLAIM ABOUT THE OFFER AS ITS OWN PAGE. With the video
+       in front of it the offer starts a screen and a half down, by design,
+       so the claim is checked where it means something: /quiz/your-kit,
+       which is still the offer on its own. The video screen's own fold is
+       e2e/vsl.spec.ts. */
     const fold = page.viewportSize()!.height;
+    if (VSL_FLOW) await page.goto('/quiz/your-kit');
     const ctaBox = (await page.locator('.kitHeroCta').boundingBox())!;
     expect(
       Math.round(ctaBox.y + ctaBox.height),
@@ -393,7 +409,7 @@ test.describe('the quiz', () => {
     await expect(page.locator('.resFacts')).toContainText('Stopped 12 months or more');
     await expect(page.locator('.resPics figure')).toHaveCount(1);
     await expect(page.locator('.resPics figure')).not.toContainText('Bothers you most');
-    await page.locator('.actionBar .cta').click();
+    await toPlanPage(page);
 
     /* Her plan is for the one thing she named, and it says estrogen is
        lower now, never swinging. She tried nothing, so nothing is read back. */
@@ -402,9 +418,9 @@ test.describe('the quiz', () => {
     await expect(page.locator('.nStep').nth(2)).toContainText('runs on less estrogen');
     await expect(page.locator('.nStep').first()).not.toContainText('swings');
     await expect(page.locator('.rise')).not.toContainText('already tried');
-    await page.locator('.actionBar .cta').click();
+    await toOfferScreen(page);
 
-    await expect(heading(page)).toHaveText('Hormone Focus, your daily support');
+    await expect(offerHead(page)).toHaveText('Hormone Focus, your daily support');
     await expect(page.getByText('You told us you have already tried')).toHaveCount(0);
     await expect(page.locator('.kitLead .kitDealNum')).toHaveText('$37.50');
     await expect(page.locator('[data-proof="lead"] .kitRev').first())
@@ -1211,8 +1227,13 @@ test.describe('the result page says nothing she did not say', () => {
     expect(result, 'and nothing is sold here').not.toContain('$');
 
     /* Her plan is where the line lives, and for her it must be absent. */
-    await page.locator('.actionBar .cta').click();
+    await toPlanPage(page);
     await throughPlan(page, 'Your 60-day plan for stubborn weight');
+    /* throughPlan presses the plan's own button. With the video in the walk
+       that button is not how she reaches the offer, so go to the screen
+       that carries it. The claim being tested is about the offer, not about
+       how she got there. */
+    if (VSL_FLOW) await page.goto('/quiz/welcome-video');
     await expect(page.locator('.kitPlan'), "the offer's plan section").toHaveCount(1);
     await expect(page.locator('.rise'), 'no attempt is read back on the offer')
       .not.toContainText('already tried');
@@ -1237,18 +1258,22 @@ test.describe('the pre-offer screens', () => {
       /* toHaveCount, NOT count(). A bare count() returns whatever is in the
          DOM at that instant and does not wait. Every count here retries. */
       const filled = () => page.locator('.segbar i.on');
-      await expect(page.locator('.segbar i'), 'three segments: result, plan, offer')
-        .toHaveCount(3);
+      /* TWO WITH THE VIDEO, THREE WITHOUT. The VSL screen carries the offer
+         inside it, so the walk after her result is one step and not two. */
+      const steps = VSL_FLOW ? ['welcome-video'] : ['your-plan', 'your-kit'];
+      await expect(page.locator('.segbar i'), 'a segment per result screen')
+        .toHaveCount(steps.length + 1);
       await expect(filled(), 'the result is the first').toHaveCount(1);
 
-      for (const [i, slug] of ['your-plan', 'your-kit'].entries()) {
+      for (const [i, slug] of steps.entries()) {
         await page.locator('.actionBar .cta').first().click();
         await expect(page).toHaveURL(new RegExp(`/quiz/${slug}$`));
-        await expect(filled(), `${slug} fills ${i + 2} of 3`).toHaveCount(i + 2);
+        await expect(filled(), `${slug} fills ${i + 2} of ${steps.length + 1}`)
+          .toHaveCount(i + 2);
       }
 
       /* And back, one screen at a time, in the order she came. */
-      for (const slug of ['your-plan', 'result']) {
+      for (const slug of [...steps].reverse().slice(1).concat('result')) {
         await page.goBack();
         await expect(page, `back reaches ${slug}`).toHaveURL(new RegExp(`/quiz/${slug}$`));
       }
@@ -1316,12 +1341,26 @@ test.describe('the two offers', () => {
          visitor gets the one bottle at 25% off. /quiz/kit is the one-bottle
          page at the old main address, off the walk; /quiz/offer-kit, the old
          Kit address, now opens it too. */
-      await page.goto('/quiz/your-plan');
-      await page.locator('.actionBar .cta').click();
-      await expect(page, 'the walk must end on her arm\'s offer').toHaveURL(/\/quiz\/your-kit$/);
-      await expect(heading(page)).toHaveText('Hormone Focus, your daily support');
-      await expect(page.locator('.segbar i.on'), 'the offer is the last step of the walk')
-        .toHaveCount(3);
+      /* WHERE THE WALK ENDS IS THE FLOW. With the video it ends on the
+         screen that carries the offer inside it, and the offer's own
+         headline is an h2 there, so the h1 is the video's. */
+      if (VSL_FLOW) {
+        await page.goto('/quiz/result');
+        await page.locator('.actionBar .cta').first().click();
+        await expect(page, 'the walk must end on the video and its offer')
+          .toHaveURL(/\/quiz\/welcome-video$/);
+        await expect(page.locator('#offer-head'))
+          .toHaveText('Hormone Focus, your daily support');
+        await expect(page.locator('.segbar i.on'), 'the video is the last step')
+          .toHaveCount(2);
+      } else {
+        await page.goto('/quiz/your-plan');
+        await page.locator('.actionBar .cta').click();
+        await expect(page, 'the walk must end on her arm\'s offer').toHaveURL(/\/quiz\/your-kit$/);
+        await expect(heading(page)).toHaveText('Hormone Focus, your daily support');
+        await expect(page.locator('.segbar i.on'), 'the offer is the last step of the walk')
+          .toHaveCount(3);
+      }
 
       /* And the off-walk address is not a step: no progress bar fills. */
       for (const slug of ['kit', 'offer-kit']) {
@@ -1695,10 +1734,19 @@ test.describe('the mechanism is the one that is true for her', () => {
       expect(result, 'the result screen must never say she has too much')
         .not.toMatch(/too much estrogen|extra estrogen/i);
 
-      await page.locator('.actionBar .cta').click();
-      await expect(page).toHaveURL(/your-plan$/);
+      /* NOR MAY HER PLAN, which is the other half of "they agree".
+         It is a step in the walk without the video and a page of its own
+         with it, so it is opened by address either way.
+
+         KNOWN, AND NOT THIS TEST'S TO HIDE: the OFFER's hero subheadline
+         says "clear the extra estrogen" to every woman, including this
+         one. That is true on /quiz/your-kit today and has been since
+         before the video went in front of it, so it is not asserted here
+         and it is not fixed here. It wants the stage split the result and
+         the plan already have. Raised with David, 14 November. */
+      await page.goto('/quiz/your-plan');
       const plan = await page.locator('.rise').innerText();
-      expect(plan, 'and nor may the screen it hands into')
+      expect(plan, 'and nor may her plan')
         .not.toMatch(/too much estrogen|extra estrogen/i);
     });
 
