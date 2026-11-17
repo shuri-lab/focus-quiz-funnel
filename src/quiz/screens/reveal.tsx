@@ -16,7 +16,7 @@ import {
    this page names her result and hands over. All seven are still exported
    and still read by the copy gate. */
 import {
-  PERI_STAT, RESULT_CASE, RESULT_CASE_VSL, RESULT_FINE, RESULT_PILL, RESULT_REASSURE,
+  PERI_STAT, RESULT_CASE, RESULT_CASE_VSL, RESULT_FINE, PLAN_BY_EMAIL_LIVE, RESULT_PILL_EMAIL, RESULT_PILL_NO_EMAIL, RESULT_REASSURE,
   RESULT_TO_PLAN_V5, RESULT_TO_VSL, pairLine,
   resultKicker, stageBlock,
 } from '../../lib/resultCopy';
@@ -41,6 +41,9 @@ const LABEL = Object.fromEntries(TILES) as Record<SymptomId, string>;
 export function R1() {
   const { S, angle, next } = useQuiz();
   const outcome = stateKey(S) as Exclude<Outcome, 'D'>;
+  /* Her plan goes by email, only to women who gave it (Jane, 17 Nov). A woman
+     from JJ's list is already on it. No opt-in button here for now. */
+  const emailed = S.consent || S.skipEmail;
   const main = mainConcern(S);
   const picked = main ? [main, ...otherConcerns(S)] : [];
   const cycle = cycleShort(S);
@@ -64,7 +67,7 @@ export function R1() {
         <ScreenTitle className="resName">{(RESULT[outcome] ?? RESULT.A).line}</ScreenTitle>
         <p className="resReassure">{RESULT_REASSURE}</p>
         {/* The success pill, in the offer page's green saving-pill style. */}
-        <p className="kitPriceSave">{RESULT_PILL}</p>
+        <p className="kitPriceSave">{PLAN_BY_EMAIL_LIVE && emailed ? RESULT_PILL_EMAIL : RESULT_PILL_NO_EMAIL}</p>
       </div>
 
       {/* 2. WHAT SHE TOLD US. Unchanged: the pictures she tapped. The

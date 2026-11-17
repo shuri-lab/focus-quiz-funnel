@@ -773,7 +773,7 @@ export const BOTTLE_HERO_HEAD = 'Hormone Focus, your daily support';
 /* The brief wrote this with an em dash. House style has had none since
    29 October, so the clause is a comma. */
 export const BOTTLE_HERO_SUB =
-  'Two capsules a day to help your body clear the extra estrogen, the first '
+  'Two capsules a day to support healthy estrogen metabolism, the first '
   + 'step to feeling like you again.';
 
 /** In place of the kit's value stack: what is in the box, in one line. */

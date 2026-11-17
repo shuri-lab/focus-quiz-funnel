@@ -93,7 +93,7 @@ export const ANGLES: Angle[] = [
       sub: 'Two capsules with a meal. Change nothing else. Hormone Focus supports hormone balance for women in perimenopause and menopause, so the flashes ease, the nights get quiet, and the weight stops going to the middle. Most women notice the first change inside two weeks, as customers report; the full reset is sixty days.',
       close: 'Quieter nights start with two capsules.',
       title: 'Hormone Focus \u2014 the 60-Day Plan',
-      description: 'Hormone Focus supports hormone balance for women in perimenopause and menopause. Every milligram disclosed. Two bottles, free shipping, and a 60-day money-back guarantee.',
+      description: 'Hormone Focus supports hormone balance for women in perimenopause and menopause. Every milligram disclosed. A welcome offer and a 60-day money-back guarantee.',
     },
   },
   {
@@ -161,7 +161,7 @@ export const ANGLES: Angle[] = [
       sub: 'Tired of waking soaked at three, throwing the covers off, and changing sheets you never used to change? Hormone Focus helps ease occasional night sweats and supports restful sleep through perimenopause and menopause. Every milligram disclosed. Two capsules a day with a meal.',
       close: 'Quieter nights start with two capsules.',
       title: 'Hormone Focus for occasional night sweats \u2014 the 60-Day Plan',
-      description: 'Hormone Focus helps ease occasional night sweats and supports restful sleep. Every milligram disclosed. Two bottles, free shipping, and a 60-day guarantee.',
+      description: 'Hormone Focus helps ease occasional night sweats and supports restful sleep. Every milligram disclosed. A welcome offer and a 60-day guarantee.',
     },
   },
   {
@@ -255,7 +255,7 @@ export const ANGLES: Angle[] = [
       sub: 'The belly that arrived without you changing a thing. The jeans that fit in March. The arms. The 3 a.m. sweats. Hormone Focus supports hormone balance through this stage, so your body stops working against you. Every milligram disclosed.',
       close: 'Your body at 40 is not working against you. It is asking for something.',
       title: 'Your body at 40 \u2014 Hormone Focus, the 60-Day Plan',
-      description: 'After 40 the body stores fat differently. Hormone Focus supports hormone balance through this stage. Every milligram disclosed. Two bottles, free shipping.',
+      description: 'After 40 the body stores fat differently. Hormone Focus supports hormone balance through this stage. Every milligram disclosed, with a 60-day guarantee.',
     },
   },
 ];

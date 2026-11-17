@@ -9,7 +9,7 @@ import { VSL_FLOW } from '../src/lib/vsl';
 import { KIT_HERO_HEAD } from '../src/lib/kitCopy';
 import {
   GATE_LINE, LOAD_CARDS, PLAN_BOTTLE_CTA, PLAN_BOTTLE_WHY, PLAN_TO_KIT_CTA, RESULT_CASE, RESULT_CASE_VSL,
-  RESULT_PILL, RESULT_TO_PLAN_V5, RESULT_TO_VSL, STAT_TITLE,
+  PLAN_BY_EMAIL_LIVE, RESULT_PILL_EMAIL, RESULT_PILL_NO_EMAIL, RESULT_TO_PLAN_V5, RESULT_TO_VSL, STAT_TITLE,
 } from '../src/lib/resultCopy';
 
 /* The statistic screen's headline, as a pattern for answerAndWait. */
@@ -185,7 +185,10 @@ test.describe('the quiz', () => {
     await expect(heading(page)).not.toHaveText(/^(peri)?menopause$/i);
     await expect(page.locator('.resReassure'))
       .toHaveText('A normal stage, and there is a lot you can do.');
-    await expect(page.locator('.resHero .kitPriceSave')).toHaveText(RESULT_PILL);
+    /* The plan goes by email (17 Nov): the badge promises the inbox only once
+       the plan email is live, and only to a woman who ticked the box. */
+    await expect(page.locator('.resHero .kitPriceSave'))
+      .toHaveText(PLAN_BY_EMAIL_LIVE ? RESULT_PILL_EMAIL : RESULT_PILL_NO_EMAIL);
 
     /* What she told us, with the pictures she tapped, the one she named first. */
     const pics = page.locator('.resPics figure');
@@ -270,7 +273,7 @@ test.describe('the quiz', () => {
       .toHaveURL(VSL_FLOW ? /\/quiz\/welcome-video$/ : /\/quiz\/your-kit$/);
     await expect(offerHead(page)).toHaveText('Hormone Focus, your daily support');
     await expect(page.locator('.kitHeroSub'))
-      .toHaveText('Two capsules a day to help your body clear the extra estrogen, '
+      .toHaveText('Two capsules a day to support healthy estrogen metabolism, '
         + 'the first step to feeling like you again.');
     await expect(page.locator('.kitHeroShot'))
       .toHaveAttribute('src', /kit-one-bottle/);
@@ -1738,12 +1741,10 @@ test.describe('the mechanism is the one that is true for her', () => {
          It is a step in the walk without the video and a page of its own
          with it, so it is opened by address either way.
 
-         KNOWN, AND NOT THIS TEST'S TO HIDE: the OFFER's hero subheadline
-         says "clear the extra estrogen" to every woman, including this
-         one. That is true on /quiz/your-kit today and has been since
-         before the video went in front of it, so it is not asserted here
-         and it is not fixed here. It wants the stage split the result and
-         the plan already have. Raised with David, 14 November. */
+         FIXED 17 November: the offer's hero subheadline used to say "clear
+         the extra estrogen" to every woman. It now says "support healthy
+         estrogen metabolism", the approved line, which is true at every
+         stage. */
       await page.goto('/quiz/your-plan');
       const plan = await page.locator('.rise').innerText();
       expect(plan, 'and nor may her plan')

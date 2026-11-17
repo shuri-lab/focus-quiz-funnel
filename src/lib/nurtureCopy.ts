@@ -156,7 +156,7 @@ export const PLAN_HEAD = 'Three simple things. That is the whole plan.';
 
 /** [what she does, what it takes]. The icons beside them carry no words. */
 export const PLAN_STEP_1: Record<StageGroup, string> = {
-  clear: 'Help your body clear the extra estrogen.',
+  clear: 'Support healthy estrogen metabolism.',
   breakdown: 'Support how your body breaks estrogen down.',
 };
 

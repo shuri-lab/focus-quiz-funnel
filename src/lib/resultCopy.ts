@@ -1044,6 +1044,25 @@ export const FEEL_SHORT =
 
 /* Direction 2, result v5 (Jane, 11 Nov). */
 export const RESULT_PILL = '\u2713 Your 60-day plan is ready';
+
+/* THE PLAN GOES BY EMAIL, 17 November (Jane). Only women who gave their
+   email get it, and the page says so: the badge promises the inbox only to
+   a woman who ticked the box, and anyone else is offered it once. */
+export const RESULT_PILL_EMAIL = '\u2713 Your 60-day plan is on its way to your inbox';
+export const RESULT_PILL_NO_EMAIL = '\u2713 Your result is ready';
+
+/**
+ * THE SWITCH. Off until Moses confirms quiz Email 1 carries her 60-day plan.
+ * Off: every woman sees "Your result is ready" and the gate box reads as it
+ * always has. On: the badge and the gate box both promise the plan by email,
+ * to the women who ticked the box. One edit, true, when the email is live.
+ */
+export const PLAN_BY_EMAIL_LIVE = false;
+
+/** The gate's consent line, before and after the plan email is live. */
+export const GATE_CONSENT = 'Yes, email me my result and tips from JJ Smith. I can unsubscribe at any time.';
+export const GATE_CONSENT_PLAN = 'Yes, email me my 60-day plan, my result and tips from JJ Smith. I can unsubscribe at any time.';
+
 export const RESULT_CASE =
   'It can feel like your body belongs to a stranger. That is common at this stage, and it does not mean something is wrong with you. Your body now needs different support, so we built your plan around it.';
 export const RESULT_TO_PLAN_V5 = 'SEE MY PLAN';

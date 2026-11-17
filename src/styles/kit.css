@@ -2000,3 +2000,7 @@
 /* And the eyebrow over the logos sits closer to its own logos than to the
    button above it. */
 .vslProof .pfPressT { margin-bottom: 16px; }
+
+
+/* Who explains it and how long, above the VSL headline (17 Nov). */
+.vslEyebrow { margin: 0 0 6px; text-align: center; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--plum, #5b2a4e); opacity: .8; }

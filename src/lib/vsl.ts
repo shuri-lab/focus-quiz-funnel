@@ -76,6 +76,12 @@ export const OFFER_HEAD_ID = 'offer-head';
 /** The section itself, which is what the sticky bar measures. */
 export const OFFER_HERO_ID = 'offer-hero';
 
+/** The buy box itself. The VSL button lands here in one tap (Jane, 16 Nov: no second scroll). */
+export const OFFER_BUY_ID = 'offer-buy';
+
+/** "Three simple things, every day": her 60-day plan, which the result pill promises. */
+export const OFFER_PLAN_ID = 'offer-plan';
+
 /**
  * How far above the headline to stop.
  *

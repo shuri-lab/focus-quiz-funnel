@@ -5,7 +5,7 @@ import { Screen, ScreenTitle, ActionBar } from '../../components/Screen';
 import { stateKey } from '../../lib/logic';
 import { isEmail, submitLead } from '../../lib/leads';
 import { track } from '../../lib/analytics';
-import { GATE_LINE, LOAD_CARDS } from '../../lib/resultCopy';
+import { GATE_CONSENT, GATE_CONSENT_PLAN, GATE_LINE, LOAD_CARDS, PLAN_BY_EMAIL_LIVE } from '../../lib/resultCopy';
 
 /* -------------------------------------------------------------- load ---- */
 
@@ -140,8 +140,7 @@ export function Gate() {
             onChange={(e) => set({ consent: e.target.checked })}
           />
           <span>
-            Yes, email me my result and tips from JJ Smith. I can unsubscribe
-            at any time.
+            {PLAN_BY_EMAIL_LIVE ? GATE_CONSENT_PLAN : GATE_CONSENT}
           </span>
         </label>
 

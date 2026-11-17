@@ -3,9 +3,9 @@ import { useQuiz } from '../context';
 import { Screen, ScreenTitle } from '../../components/Screen';
 import { VslPlayer } from '../../components/VslPlayer';
 import { PhotoRail, PressRail } from '../../components/Proof';
-import { stateKey } from '../../lib/logic';
-import { OFFER_HEAD_ID, OFFER_SCROLL_OFFSET } from '../../lib/vsl';
-import { VSL_CTA, VSL_HEAD } from '../../lib/vslCopy';
+import { mainConcern, stateKey } from '../../lib/logic';
+import { OFFER_BUY_ID, OFFER_SCROLL_OFFSET } from '../../lib/vsl';
+import { VSL_CTA, VSL_EYEBROW, vslHead } from '../../lib/vslCopy';
 import { track } from '../../lib/analytics';
 import { R2 } from './offer';
 import { getArm } from '../../lib/arm';
@@ -55,18 +55,22 @@ export function Vsl() {
      Onto the HEADLINE, by its id, and not scrollIntoView on the section:
      the app header is sticky, so "the top of the viewport" is underneath
      it. Measured and offset instead. */
-  const toOffer = useCallback(() => {
-    track.vslCta(outcome);
-    const el = document.getElementById(OFFER_HEAD_ID);
+  /* STRAIGHT TO THE BUY BOX, 17 November (Jane). It used to land on the
+     offer's hero, whose own button scrolled her down again: two taps to reach
+     the price she was promised. */
+  const scrollToId = useCallback((id: string) => {
+    const el = document.getElementById(id);
     if (!el) return;
     const y = el.getBoundingClientRect().top + window.scrollY - OFFER_SCROLL_OFFSET;
     window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
-  }, [outcome]);
+  }, []);
+  const toOffer = useCallback(() => { track.vslCta(outcome); scrollToId(OFFER_BUY_ID); }, [outcome, scrollToId]);
 
   return (
     <Screen id="vsl">
       <div className="vsl" ref={top}>
-        <ScreenTitle className="vslHead">{VSL_HEAD}</ScreenTitle>
+        <p className="vslEyebrow">{VSL_EYEBROW}</p>
+        <ScreenTitle className="vslHead">{vslHead(mainConcern(S))}</ScreenTitle>
 
         <VslPlayer onInteract={onPlay} />
 

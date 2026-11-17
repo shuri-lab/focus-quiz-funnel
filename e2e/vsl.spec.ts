@@ -110,22 +110,21 @@ test.describe('the welcome video', () => {
     await cta.click();
     await page.waitForTimeout(1200);
 
-    /* ONTO THE HEADLINE, which is what David asked for: not the top of the
-       section, whose eyebrow and rating would read first. */
-    const head = await page.evaluate(() => {
-      const el = document.getElementById('offer-head')!;
+    /* ONTO THE BUY BOX, 17 November (Jane). It used to land on the offer's
+       headline, whose own button then scrolled her down a second time. One
+       tap now puts the price and the buy button in front of her. */
+    const box = await page.evaluate(() => {
+      const el = document.getElementById('offer-buy')!;
       const r = el.getBoundingClientRect();
       return {
-        text: el.textContent!.trim(),
         top: Math.round(r.top),
         clearOfTheHeader: r.top > 8,
-        onScreen: r.top >= 0 && r.bottom <= window.innerHeight,
+        topOnScreen: r.top >= 0 && r.top < window.innerHeight / 2,
       };
     });
-    expect(head.text).toBe('Hormone Focus, your daily support');
-    expect(head.onScreen, `the headline is at ${head.top}px`).toBe(true);
+    expect(box.topOnScreen, `the buy box starts at ${box.top}px`).toBe(true);
     /* The app header is sticky, so landing at exactly 0 hides it under. */
-    expect(head.clearOfTheHeader, 'the headline is under the app header').toBe(true);
+    expect(box.clearOfTheHeader, 'the buy box is under the app header').toBe(true);
     expect(page.url(), 'the button navigated').toContain('/quiz/welcome-video');
   });
 

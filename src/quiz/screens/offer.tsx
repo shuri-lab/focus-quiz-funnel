@@ -7,7 +7,7 @@ import { VideoWall } from '../../components/VideoWall';
 import { mainConcern, stateKey } from '../../lib/logic';
 import { OFFER_DISCLAIMER } from '../../lib/content';
 /* The anchor the VSL screen's button scrolls to. */
-import { OFFER_HEAD_ID, OFFER_HERO_ID } from '../../lib/vsl';
+import { OFFER_BUY_ID, OFFER_HEAD_ID, OFFER_HERO_ID, OFFER_PLAN_ID } from '../../lib/vsl';
 /* KIT_PIECES, KIT_PIECE_IDS, KIT_PIECES_TITLE and KIT_FOCUS_CLAIM are no
    longer imported. The "What's inside" rows were the same four things the
    kit card's own value stack already lists, with prices, directly under a
@@ -371,7 +371,7 @@ export function R2({ variant = 'kit', screen = 'r2', embedded = false }: {
           take it" while the page sold a bottle alone; step one here is that
           same instruction. HOW_HEAD and HOW_BODY are still exported and
           still gated. */}
-      <section className="kitBand kitPlan">
+      <section className="kitBand kitPlan" id={OFFER_PLAN_ID}>
         <p className="kitEyebrow">{PLAN_EYEBROW}</p>
         <h2 className="kitH2">{PLAN_HEAD}</h2>
         {/* ON THE BOTTLE PAGE ONLY. Steps two and three are the guide and the
@@ -458,7 +458,7 @@ export function R2({ variant = 'kit', screen = 'r2', embedded = false }: {
           Lower than it was, which is the brief's call: the page now names
           the package, shows it, proves it and explains it before it asks.
           Same card, same two options, SAME CART LINKS. */}
-      <section className="kitBand offer" ref={offer}>
+      <section className="kitBand offer" id={OFFER_BUY_ID} ref={offer}>
         <KitOffer outcome={outcome} angle={angle.slug} variant={variant} />
       </section>
 
