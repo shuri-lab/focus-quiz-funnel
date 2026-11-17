@@ -19,20 +19,25 @@
  * Keyed by mainConcern. The eyebrow above it says who and how long.
  */
 export const VSL_HEAD_BY: Record<string, string> = {
-  weight: 'Why the weight keeps going to your middle, and what to do about it',
-  sleep: 'Why you keep waking up at 3 AM, and what to do about it',
-  energy: 'Why you are tired even after a full night, and what to do about it',
-  sweats: 'Why the hot flashes and night sweats keep coming, and what to do about it',
-  bloat: 'Why you feel bloated by the afternoon, and what to do about it',
-  mood: 'Why your mood and memory feel off, and what to do about it',
+  weight: 'Why the weight keeps going to your middle',
+  sleep: 'Why you keep waking up at 3 AM',
+  energy: 'Why you are tired even after a full night',
+  sweats: 'Why the hot flashes keep coming back',
+  bloat: 'Why you feel bloated by the afternoon',
+  mood: 'Why your mood and memory feel off',
 };
 
 /** When she named no symptom. */
-export const VSL_HEAD = 'Why your body feels different, and what to do about it';
+export const VSL_HEAD = 'Why your body feels different';
+
+/** Under the headline, smaller (Jane, 17 Nov: the full sentence ran to four lines). */
+export const VSL_SUB = 'And what to do about it.';
 
 /** Above the headline: who explains it, and that it is short (the video runs 2 min 47 s). */
 export const VSL_EYEBROW = 'JJ explains in under 3 minutes';
 
+/* WHICH SYMPTOM, WHEN SHE PICKED SEVERAL: mainConcern, her answer to "Which
+   one bothers you the most?". With one symptom ticked, that one. */
 export const vslHead = (concern: string): string => VSL_HEAD_BY[concern] ?? VSL_HEAD;
 
 

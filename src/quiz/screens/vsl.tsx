@@ -5,7 +5,7 @@ import { VslPlayer } from '../../components/VslPlayer';
 import { PhotoRail, PressRail } from '../../components/Proof';
 import { mainConcern, stateKey } from '../../lib/logic';
 import { OFFER_BUY_ID, OFFER_SCROLL_OFFSET } from '../../lib/vsl';
-import { VSL_CTA, VSL_EYEBROW, vslHead } from '../../lib/vslCopy';
+import { VSL_CTA, VSL_EYEBROW, VSL_SUB, vslHead } from '../../lib/vslCopy';
 import { track } from '../../lib/analytics';
 import { R2 } from './offer';
 import { getArm } from '../../lib/arm';
@@ -71,6 +71,7 @@ export function Vsl() {
       <div className="vsl" ref={top}>
         <p className="vslEyebrow">{VSL_EYEBROW}</p>
         <ScreenTitle className="vslHead">{vslHead(mainConcern(S))}</ScreenTitle>
+        <p className="vslSub">{VSL_SUB}</p>
 
         <VslPlayer onInteract={onPlay} />
 
