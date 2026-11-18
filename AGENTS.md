@@ -1,4 +1,5 @@
 # Project architecture
+- Do not import the upstream SPA index.html into this TanStack Start project; the root route owns the document, and the obsolete HTML forces builds to resolve the removed main.tsx entry.
 - Keep TanStack Start’s file routes and bootstrap when importing upstream files; adapt React Router imports through `src/lib/rr.tsx` so the deployed runtime has a valid entry point.
 - Render both quiz entry routes inside ClientOnly because saved answers and list-link state are browser-owned.
 - Load PostHog lazily behind the shared analytics module to keep server imports safe.
