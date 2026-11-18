@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams } from '@/lib/rr';
 import { angleBySlug } from '../lib/angles';
 import { usePageMeta } from '../lib/usePageMeta';
 import { shopUrl, track } from '../lib/analytics';

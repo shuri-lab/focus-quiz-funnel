@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Navigate, useParams, useSearchParams } from 'react-router-dom';
+import { Navigate, useParams, useSearchParams } from '@/lib/rr';
 import { usePageMeta } from '../lib/usePageMeta';
 import { track } from '../lib/analytics';
 import { BOTTLE } from '../lib/content';

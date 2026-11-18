@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useParams } from '@/lib/rr';
 import { QuizProvider } from './QuizContext';
 import { useQuiz } from './context';
 import { QuizHeader } from './QuizHeader';

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/rr';
 import { JUMPS, type Jump } from './review';
 import { setPreset } from './flag';
 import './review.css';

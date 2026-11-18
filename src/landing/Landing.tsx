@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams } from '@/lib/rr';
 import { angleBySlug, angleTitle } from '../lib/angles';
 import { usePageMeta } from '../lib/usePageMeta';
 import { track } from '../lib/analytics';

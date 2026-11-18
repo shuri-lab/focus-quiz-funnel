@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from '@/lib/rr';
 import {
   createState, docReason, nextId, prevId, stateKey, QUESTION_NUMBER, QUESTION_TOTAL, REVEAL,
   shouldSkip, type QuizState, type ScreenId,
